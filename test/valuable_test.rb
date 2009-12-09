@@ -27,7 +27,6 @@ class Developer < Valuable
   has_value :certifications, :klass => DevCertifications, :default => DevCertifications.new
   has_value :quote
   has_value :employed, :klass => :boolean, :negative => 'unemployed'
-  has_value :hit_points, :klass => :decimal
 
   has_collection :favorite_gems  
 
@@ -179,20 +178,6 @@ class BaseTest < Test::Unit::TestCase
 
   def test_that_negative_methods_are_negative
     assert_equal true, Developer.new(:employed => false).unemployed?
-  end
-
-  def test_that_strings_cast_to_decimals
-    assert_equal 3.7, Developer.new(:hit_points => '3.7').hit_points
-    # technically, HP must be measured as an integer. This is what I came
-    # up with. You'll have to cope.
-  end
-
-  def test_that_non_numeric_values_cast_to_decimal_result_in_nil
-    assert_equal nil, Developer.new(:hit_points => 'huge baby').hit_points
-  end
-
-  def test_that_a_float_can_become_a_decimal
-    assert_equal 3.6, Developer.new(:hit_points => 3.6).hit_points
   end
 
   def test_that_constructor_can_handle_an_instance_of_nothing

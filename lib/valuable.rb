@@ -1,5 +1,3 @@
-require 'decimal'
-
 # Valuable is the class from which all classes (who are so inclined)
 # should inherit.
 #
@@ -77,8 +75,8 @@ class Valuable
     # :default - for the given attribute, use this value if no other is
     # provided.
     #
-    # :klass - light weight type casting. Use :integer, :string, 
-    # :decimal or :boolean. Alternately, supply a class. 
+    # :klass - light weight type casting. Use :integer, :string or
+    # :boolean. Alternately, supply a class. 
     #
     # When a :klassified attribute is set to some new value, if the value
     # is not nil and is not already of that class, the value will be cast
@@ -144,13 +142,6 @@ class Valuable
           attributes[name] = value == '0' ? false : !!value
 	end
     
-      when :decimal
-
-        define_method "#{name}=" do |value|
-          attributes[name] = Decimal.new(value.to_s)
-          attributes[name] = nil if attributes[name].nan? 
-	end
-
       else
 
         define_method "#{name}=" do |value|
