@@ -94,6 +94,7 @@ class Valuable
     # Due to the way Rails handles checkboxes, '0' resolves to FALSE,
     # though it would normally resolve to TRUE.
     def has_value(name, options={})
+
       name = name.to_sym
       
       attributes << name
@@ -213,6 +214,11 @@ class Valuable
 
     private
 
+    def inherited(child)
+      attributes.each {|att| child.attributes << att }
+      defaults.each {|(name, value)| child.defaults[name] = value }
+    end
+    
     # This method returns an array of symbols, which are the only allowed
     # options for has_value.
     def known_options
