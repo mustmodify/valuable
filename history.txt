@@ -1,3 +1,5 @@
 2009-07-06 jw [0.7.1] - Constructor should be able to handle being passed nil. Added history file, update to rakefile.
 
 2009-12-09 jw [0.7.1] - created github repo, substantial updates to README including converting it to markdown format. Removed 'decimal' -- why did adding that dependency seem like a good idea? Other that IEEE floats? Oh, that was it.
+
+2009-12-09 jw [0.8] - added fix for inheritance issue. Increment version to 0.8
