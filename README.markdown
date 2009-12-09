@@ -1,49 +1,134 @@
 Introducing Valuable
 ====================
 
-Valuable enables quick modeling... is attr_accessor on steroids.  It intends to use a simple and intuitive interface, allowing you easily create models without hassles, so you can get on with the logic specific to your application.
+Valuable enables quick modeling... it's attr_accessor on steroids.  It intends to use a simple and intuitive interface, allowing you easily create models without hassles, so you can get on with the logic specific to your application. I find myself using it in sort of a presenter capacity, when I have to pull data from non-standard data sources, and to handle temporary data during imports.
 
 Valuable provides DRY decoration like attr_accessor, but includes default values, light weight type casting and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
 
-Example
+Examples
 -------
 
-    class BaseballPlayer < Valuable
+_basic syntax_
 
-      has_value :at_bats, :klass => :integer
-      has_value :hits, :klass => :integer
-
-      def average
-        hits/at_bats.to_f if hits && at_bats
+      class Fruit
+        has_value :name
+        has_collection :vitamins
       end
-    end
 
-    >> joe = BaseballPlayer.new(:hits => '5', :at_bats => '20')
+_constructor accepts an attributes hash_
 
-    >> joe.at_bats
-    => 20
+      >> apple = Fruit.new(:name => 'Apple')
 
-    >> joe.average
-    => 0.25
+      >> apple.name
+      => 'Apple'
 
-    class School < Valuable
-      has_value :name
-      has_value :phone, :klass => PhoneNumber
-      has_value :location, :default => 'unknown'
-    end
+      >> apple.vitamins
+      => []
 
-    >> school = School.new(:name => 'Vanderbilt', :phone => '3332223333')
+_default values_
 
-    >> school.location
-    => 'unknown'
+      class Developer
+        has_value :name
+        has_value :nickname, :default => 'mort'
+      end
 
-    >> school.location = nil
+      >> dev = Developer.new(:name => 'zk')
 
-    >> school.location
-    => nil
- 
-    >> school.phone
-    => '(333) 222-3333'
+      >> dev.name
+      => 'zk'
+
+      >> dev.nickname
+      => 'mort'
+
+_setting a value to nil overrides the default._
+
+      >> Developer.new(:name => 'KDD', :nickname => nil).nickname
+      => nil
+
+_light weight type casting_
+
+      class BaseballPlayer < Valuable
+
+        has_value :at_bats, :klass => :integer
+        has_value :hits, :klass => :integer
+
+        def average
+          hits/at_bats.to_f if hits && at_bats
+        end
+      end
+
+      >> joe = BaseballPlayer.new(:hits => '5', :at_bats => '20', :on_drugs => '0' == '1')
+
+      >> joe.at_bats
+      => 20
+
+      >> joe.average
+      => 0.25
+
+_I find myself using classes to format things... ( PhoneNumber is provided in `/examples` )_
+
+      class School < Valuable
+        has_value :name
+        has_value :phone, :klass => PhoneNumber
+      end
+
+      >> School.new(:name => 'Vanderbilt', :phone => '3332223333').phone
+      => '(333) 222-3333'
+
+_as a presenter in Rails_
+
+      class CalenderPresenter < Valuable
+        has_value :month, :klass => Integer, :default => Time.now.month
+        has_value :year, :klass => Integer, :default => Time.now.year
+
+        def start_date
+          Date.civil( year, month, 1)
+        end
+
+        def end_date
+          Date.civil( year, month, -1) #strange I know
+        end
+
+        def events
+          Event.find(:all, :conditions => event_conditions)
+        end
+        
+        def event_conditions
+          ['starts_at between ? and ?', start_date, end_date]
+        end
+      end
+
+_this class might appear in a controller like this:_
+
+      class CalendarController < ApplicationController
+        def show
+          @presenter = CalendarPresenter.new(params[:calendar])
+        end
+      end
+
+_but it's easier to understand like this:_
+
+      >> @presenter = CalendarPresenter.new({}) # first pageload
+
+      >> @presenter.start_date
+      => Tue, 01 Dec 2009
+
+      >> @presenter.end_date
+      => Thu, 31 Dec 2009
+
+      >> # User selects some other month and year; the next request looks like...
+      
+      >> @presenter = CalendarPresenter.new({:month => '2', :year => '2002'})
+
+      >> @presenter.start_date
+      => Fri, 01 Feb 2002
+
+      >> @presenter.end_date
+      => Thu, 28 Feb 2002
+
+      ...
+
+So, if you're reading this, you're probably thinking, "I could have done that!" Yes, it's true. I'll happily agree that it's a relatively simple tool if you'll agree that it lets you model a calendar with an intuitive syntax, prevents you from writing yet another obvious constructor, and allows you to keep your brain focused on your app.
 
 Default Values
 --------------
@@ -58,4 +143,3 @@ If there is no default value, the result will be nil, EVEN if type casting is pr
 KLASS-ification
 ---------------
 `:integer`, `:string` and `:boolean` use `to_i`, `to_s` and `!!` respectively. All other klasses use `klass.new(value)` unless the value `is_a?(klass)`, in which case it is unmolested. Nils are never klassified. In the example above, hits, which is an integer, is `nil` if not set, rather than `nil.to_i = 0`.
-
