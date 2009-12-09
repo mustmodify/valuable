@@ -4,9 +4,6 @@ require 'test/unit'
 require 'valuable.rb'
 require 'mocha'
 
-class Signature < String
-end
-
 class Cubical < String
   def initialize(number)
     super "Lives in Cubical #{number}"
@@ -20,16 +17,17 @@ class DevCertifications < Valuable
 end
 
 class Developer < Valuable
-  has_value :experience, :klass => Integer
+  has_value :experience, :klass => :integer
   has_value :has_exposure_to_sunlight, :default => false
   has_value :mindset
-  has_value :name, :default => 'DHH Jr.', :klass => String
-  has_value :signature, :klass => Signature
-  has_value :snacks_per_day, :klass => Integer, :default => 7
+  has_value :name, :default => 'DHH Jr.', :klass => :string
+  has_value :snacks_per_day, :klass => :integer, :default => 7
   has_value :cubical, :klass => Cubical
   has_value :hacker, :default => true
-  has_value :certifications, :default => DevCertifications.new
+  has_value :certifications, :klass => DevCertifications, :default => DevCertifications.new
   has_value :quote
+  has_value :employed, :klass => :boolean, :negative => 'unemployed'
+  has_value :hit_points, :klass => :decimal
 
   has_collection :favorite_gems  
 
@@ -70,8 +68,8 @@ class BaseTest < Test::Unit::TestCase
   end
 
   def test_that_attributes_can_be_klassified
-    dev = Developer.new(:signature => 'brah brah')
-    assert_equal Signature, dev.signature.class
+    dev = Developer.new(:cubical => 12)
+    assert_equal Cubical, dev.cubical.class
   end
 
   def test_that_defaults_appear_in_attributes_hash
@@ -83,7 +81,7 @@ class BaseTest < Test::Unit::TestCase
   end
 
   def test_that_randomly_classed_attributes_persist_nils
-    assert_equal nil, Developer.new.signature
+    assert_equal nil, Developer.new.cubical
   end
 
   def test_that_randomly_classed_attributes_respect_defaults
@@ -102,7 +100,7 @@ class BaseTest < Test::Unit::TestCase
   end
   
   def test_that_attributes_are_available_as_class_method
-    assert Developer.attributes.include?(:signature)
+    assert Developer.attributes.include?(:cubical)
   end
 
   def test_that_a_model_can_have_a_collection
@@ -142,9 +140,9 @@ class BaseTest < Test::Unit::TestCase
   end
 
   def test_that_properly_klassed_values_are_not_rekast
-    why_hammer = Signature.new('go ask your mom')
-    Signature.expects(:new).with(why_hammer).never
-    hammer = Developer.new(:signature => why_hammer)
+    stapler = Cubical.new('in sub-basement')
+    Cubical.expects(:new).with(stapler).never
+    Developer.new(:cubical => stapler)
   end
 
   def test_that_values_can_be_set_to_false
@@ -161,5 +159,51 @@ class BaseTest < Test::Unit::TestCase
 
   def test_that_default_values_can_be_set_to_nothing
     assert_equal nil, Developer.new(:hacker => nil).hacker
+  end
+
+  def test_that_values_are_cast_to_boolean
+    assert_equal false, Developer.new(:employed => nil).employed
+  end
+
+  def test_that_string_zero_becomes_false
+    assert_equal false, Developer.new(:employed => '0').employed
+  end
+
+  def test_that_boolean_values_get_questionmarked_methods
+    assert Developer.instance_methods.include?('employed?')
+  end
+
+  def test_that_boolean_values_get_negative_methods
+    assert Developer.instance_methods.include?('unemployed?')
+  end
+
+  def test_that_negative_methods_are_negative
+    assert_equal true, Developer.new(:employed => false).unemployed?
+  end
+
+  def test_that_strings_cast_to_decimals
+    assert_equal 3.7, Developer.new(:hit_points => '3.7').hit_points
+    # technically, HP must be measured as an integer. This is what I came
+    # up with. You'll have to cope.
+  end
+
+  def test_that_non_numeric_values_cast_to_decimal_result_in_nil
+    assert_equal nil, Developer.new(:hit_points => 'huge baby').hit_points
+  end
+
+  def test_that_a_float_can_become_a_decimal
+    assert_equal 3.6, Developer.new(:hit_points => 3.6).hit_points
+  end
+
+  def test_that_constructor_can_handle_an_instance_of_nothing
+    assert_nothing_raised do
+      Developer.new(nil)
+    end
+  end
+
+  def test_that_klassification_does_not_break_when_stringified
+    assert_nothing_raised do
+      Developer.new(:experience => '2')
+    end
   end
 end

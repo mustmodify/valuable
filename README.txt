@@ -1,58 +1,60 @@
-=Introducing Valuable=
 
-Valuable is a ruby base class that is essentially attr_accessor on steroids. Its aim is to provide Rails-like goodness where ActiveRecord isn't an option.  It intends to use a simple and intuitive interface, allowing you to get on with the logic specific to your application.
+=Introducing Valuable
 
-Valuable provides the same dry declaration as attr_accessor, but includes default values, light weight type casting, a constructor that accepts an attributes hash, a class-level list of attributes, and an instance-level attributes hash. The type casting can also be used for parsing values.
+Valuable enables quick modeling... is attr_accessor on steroids.  It intends to use a simple and intuitive interface, allowing you easily create models without hassles, so you can get on with the logic specific to your application.
 
-==Example==
+Valuable provides DRY decoration like attr_accessor, but includes default values, light weight type casting and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
 
-{{{
+==Example
+<code>
 class BaseballPlayer < Valuable
 
-  has_value :at_bats, :klass => Integer
-  has_value :hits, :klass => Integer
-  has_value :league, :default => 'unknown'
-  has_value :name
-  has_value :jersey, :klass => Jersey, :default => 'Unknown'
-
-  has_collection :teammates
+  has_value :at_bats, :klass => :integer
+  has_value :hits, :klass => :integer
 
   def average
     hits/at_bats.to_f if hits && at_bats
   end
 end
 
-class Jersey < String
-  def initialize(object)
-    super "Jersey Number #{object})"
-  end
-end
+>> joe = BaseballPlayer.new(:hits => '5', :at_bats => '20')
 
->> joe = BaseballPlayer.new(:name => 'Joe', :hits => 5, :at_bats => 20, :jersey => 12)
 >> joe.at_bats
 => 20
->> joe.league
-=> 'unknown'
+
 >> joe.average
 => 0.25
->> joe.at_bats = nil
->> joe.average
+
+class School < Valuable
+  has_value :name
+  has_value :phone, :klass => PhoneNumber
+  has_value :location, :default => 'unknown'
+end
+
+>> school = School.new(:name => 'Vanderbilt', :phone => '3332223333')
+
+>> school.location
+=> 'unknown'
+
+>> school.location = nil
+
+>> school.location
 => nil
->> joe.teammates
-=> []
->> joe.jersey
-=> 'Jersey Number 12'
->> joe.jersey = nil
->> joe.jersey
-=> 'Unknown' 
-}}}
 
-==DEFAULT VALUES==
+>> school.phone
+=> '(333) 222-3333'
+</code>
 
-Default values are used when the attribute is nil. When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it.
+==DEFAULT VALUES
+
+Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default. 
+
+When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it.
+
+If a value having a default is set to null after it is constructed, it will NOT be set to the default.
 
 If there is no default value, the result will be nil, EVEN if type casting is provided. Thus, a field typically cast as an Integer can be nil. See calculation of average.
 
-==KLASS-ification==
+==KLASS-ification
 
-Integer and String use to_i and to_s, respectively. All other klasses use klass.new(value). Nils are never klassified. In the example above, hits, which is an integer, is nil if not set, rather than nil.to_i = 0.
+:integer, :string and :boolean use to_i, to_s and !! respectively. All other klasses use klass.new(value) unless the value is_a(klass), in which case it is unmolested. Nils are never klassified. In the example above, hits, which is an integer, is nil if not set, rather than nil.to_i = 0.

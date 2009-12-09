@@ -1,4 +1,16 @@
-Allow the constructor to ignore attributes passed in that are not listed in has_value. This will allow it to act as a 'presenter' class ie...
+- Add Valuable#to_yaml and Valuable.from_yaml
+- make it easy to include validatable or ActiveRecord::Validations
+- make it easy to use has_value from activerecord model.
+- add optional :always_klass ?
+- for :klass => :integer, 'abc' resolves to 0 ... fix that.
+- optionally, values should be on the class rather than the instance, as in:
+  Config < ValuableClass
+    has_value :background_color
+  end
+
+  Config.background_color
+
+- 2. Create a 'Valuable::Presenter' base class that filters out rails params, handles nested params, knows 0 is false for checkboxes, works with form_for#checkbox...
 
 class ProductsController < ApplicationController
   
@@ -23,15 +35,4 @@ like this:
 
 
 
-
-2. Create a 'Valuable::Presenter' base class that filters out rails params, handles nested params, knows 0 is false for checkboxes, works with form_for#checkbox, maybe handles things like this:
-
-class StarWarsPresenter < Valuable::Presenter
-  checkbox :is_good
-  checkbox :is_evil
-
-  def vader?
-    is_good && is_evil
-  end
-
-end
+ 
