@@ -1,0 +1,37 @@
+Allow the constructor to ignore attributes passed in that are not listed in has_value. This will allow it to act as a 'presenter' class ie...
+
+class ProductsController < ApplicationController
+  
+  def reviews
+    @presenter = ReviewPresenter.new(params)
+
+    @product = @presenter.product
+    @reviews = @presenter.reviews 
+    
+  end
+  
+end
+
+which currently raises:
+undefined method `action=' for #<ReviewPresenter:0x5e7fa18>
+
+
+like this:
+  def initialize(atts = {})
+    super(atts.except('action', 'controller'))
+  end
+
+
+
+
+2. Create a 'Valuable::Presenter' base class that filters out rails params, handles nested params, knows 0 is false for checkboxes, works with form_for#checkbox, maybe handles things like this:
+
+class StarWarsPresenter < Valuable::Presenter
+  checkbox :is_good
+  checkbox :is_evil
+
+  def vader?
+    is_good && is_evil
+  end
+
+end
