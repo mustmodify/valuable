@@ -130,6 +130,30 @@ _but it's easier to understand like this:_
 
 So, if you're reading this, you're probably thinking, "I could have done that!" Yes, it's true. I'll happily agree that it's a relatively simple tool if you'll agree that it lets you model a calendar with an intuitive syntax, prevents you from writing yet another obvious constructor, and allows you to keep your brain focused on your app.
 
+_you can access the attributes via the attributes hash. Only default and specified attributes will have entries here._
+
+      class Person < Valuable
+        has_value :name
+        has_value :is_developer, :default => false
+        has_value :ssn
+      end
+
+      >> elvis = Person.new(:name => 'The King')
+
+      >> elvis.attributes
+      => {:name=>"The King", :is_developer=>false}      
+
+      >> elvis.attributes[:name]
+      => "The King"
+
+      >> elvis.ssn
+      => nil
+
+_also, you can get a list of all the defined attributes from the class_
+      
+      >> Person.attributes
+      => [:name, :is_developer, :ssn]
+
 Default Values
 --------------
 Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default. 
