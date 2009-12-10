@@ -1,21 +1,21 @@
 # Valuable is the class from which all classes (who are so inclined)
 # should inherit.
 #
-# Example:
+# ==Example:
 # 
-# class Bus < Valuable
+#   class Bus < Valuable
+#     
+#     has_value :number, :klass => :integer
+#     has_value :color, :default => 'yellow'
+#     has_collection :riders
 #   
-#   has_value :number, :klass => :integer
-#   has_value :color, :default => 'yellow'
-#   has_collection :riders
-#   
-# end
+#   end
 #
-# >> Bus.attributes
-# => [:number, :color, :riders]
-# >> bus = Bus.new(:number => '3', :riders => ['GOF', 'Fowler', 'Mort']
-# >> bus.attributes
-# => {:number => 3, :riders => ['GOF', 'Fowler', 'Mort'], :color => 'yellow'}
+#   >> Bus.attributes
+#   => [:number, :color, :riders]
+#   >> bus = Bus.new(:number => '3', :riders => ['GOF', 'Fowler', 'Mort']
+#   >> bus.attributes
+#   => {:number => 3, :riders => ['GOF', 'Fowler', 'Mort'], :color => 'yellow'}
 class Valuable
 
   # Returns a Hash representing all known values. Values are set three ways:
@@ -28,25 +28,21 @@ class Valuable
   #          
   # Values that have not been set and have no default not appear in this
   # collection. Their namesake attribute methods will respond with nil.
+  # Always use symbols to access these values.
   # 
-  # Currently returns a HashWithIndifferentAccess, though that may change
-  # since it would remove the dependancy on ActiveSupport. Always use symbols
-  # to access these values.
-  # 
-  # >> bus = Bus.new(:number => 16) # color has default value 'yellow'
-  # >> bus.attributes
-  # => {:color => 'yellow', :number => 16}
+  #   >> bus = Bus.new(:number => 16) # color has default value 'yellow'
+  #   >> bus.attributes
+  #   => {:color => 'yellow', :number => 16}
   def attributes
     @attributes ||= deep_duplicate_of(self.class.defaults) 
   end
 
-  # accepts a hash that will be used to populate the predefined attributes
-  # for this class.
+  # accepts an optional hash that will be used to populate the 
+  # predefined attributes for this class.
   def initialize(atts = nil)
     atts.each { |name, value| __send__("#{name}=", value ) }  if atts
   end
 
-  # Creates a duplicate of all values. 
   def deep_duplicate_of(value)
     Marshal.load(Marshal.dump(value))
   end
@@ -61,8 +57,8 @@ class Valuable
     # Returns a name/value set of the values that will be used on
     # instanciation unless new values are provided.
     #
-    # >> Bus.defaults
-    # => {:color => 'yellow'}
+    #   >> Bus.defaults
+    #   => {:color => 'yellow'}
     def defaults
       @defaults ||= {}
     end 
@@ -72,11 +68,11 @@ class Valuable
     # hash. Valid options are :default, :klass and (when :klass is 
     # Boolean) :negative.
     #
-    # :default - for the given attribute, use this value if no other is
-    # provided.
+    #   :default - for the given attribute, use this value if no other
+    #   is provided.
     #
-    # :klass - light weight type casting. Use :integer, :string or
-    # :boolean. Alternately, supply a class. 
+    #   :klass - light weight type casting. Use :integer, :string or
+    #   :boolean. Alternately, supply a class. 
     #
     # When a :klassified attribute is set to some new value, if the value
     # is not nil and is not already of that class, the value will be cast
@@ -168,13 +164,13 @@ class Valuable
     # In addition to the normal getter and setter, boolean attributes
     # get a method appended with a ?.
     #
-    # class Planer < Valuable
-    #   has_value :free_agent, :klass => Boolean
-    # end
+    #   class Player < Valuable
+    #     has_value :free_agent, :klass => Boolean
+    #   end
     #
-    # juan = Bus.new(:free_agent => true)
-    # >> juan.free_agent?
-    # => true
+    #   juan = Player.new(:free_agent => true)
+    #   >> juan.free_agent?
+    #   => true
     def create_question_for(name)
       define_method "#{name}?" do
         attributes[name]
@@ -183,13 +179,13 @@ class Valuable
 
     # In some situations, the opposite of a value may be just as interesting.
     #
-    # class Coder < Valuable
-    #   has_value :agilist, :klass => Boolean, :negative => :waterfaller
-    # end
+    #   class Coder < Valuable
+    #     has_value :agilist, :klass => Boolean, :negative => :waterfaller
+    #   end
     #
-    # monkey = Coder.new(:agilist => false)
-    # >> monkey.waterfaller?
-    # => true
+    #   monkey = Coder.new(:agilist => false)
+    #   >> monkey.waterfaller?
+    #   => true
     def create_negative_question_for(name, negative)
       define_method "#{negative}?" do
         !attributes[name]
@@ -199,15 +195,15 @@ class Valuable
     # this is a more intuitive way of marking an attribute as holding a
     # collection. 
     #
-    # class Bus < Valuable
-    #   has_value :riders, :default => [] # meh...
-    #   has_collection :riders # better!
-    # end
+    #   class Bus < Valuable
+    #     has_value :riders, :default => [] # meh...
+    #     has_collection :riders # better!
+    #   end
     #
-    # >> bus = Bus.new
-    # >> bus.riders << 'jack'
-    # >> bus.riders
-    # => ['jack']
+    #   >> bus = Bus.new
+    #   >> bus.riders << 'jack'
+    #   >> bus.riders
+    #   => ['jack']
     def has_collection(name)
       has_value(name, :default => [] )
     end 
@@ -219,17 +215,17 @@ class Valuable
       defaults.each {|(name, value)| child.defaults[name] = value }
     end
     
-    # This method returns an array of symbols, which are the only allowed
-    # options for has_value.
     def known_options
      [:klass, :default, :negative]
     end
 
-    # validates option hashes passed to has_value   
+    # this helper raises an exception if the options passed to has_value
+    # are wrong. Mostly written because I occasionally used :class instead
+    # of :klass and, being a moron, wasted time trying to find the issue. 
     def check_options_validity(name, options)
       invalid_options = options.keys - known_options 
 
-      raise ArgumentError, "has_value did not know how to respond to #{invalid_options.join(', ')}. Valid (optional) arguments are: #{known_options.join(', ')}" unless invalid_options.empty?      
+      raise ArgumentError, "has_value did not know how to respond to option(s) #{invalid_options.join(', ')}. Valid (optional) arguments are: #{known_options.join(', ')}" unless invalid_options.empty?      
     end
 
   end
