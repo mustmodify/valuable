@@ -65,6 +65,22 @@ _light weight type casting_
       >> joe.average
       => 0.25
 
+_aliases_
+
+      # This example requires active_support because of Hash.from_xml
+
+      class Software < Valuable
+        has_value :name, :alias => 'Title'
+      end
+
+      >> xml = '<software><Title>Windows XP</Title></software>'
+
+      >> xp = Software.new(:Title => Hash.from_xml(xml)['software'])
+
+      >> xp.name
+      => "Windows XP"
+
+
 _I find myself using classes to format things... ( PhoneNumber is provided in `/examples` )_
 
       class School < Valuable

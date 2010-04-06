@@ -7,15 +7,16 @@
 #     
 #     has_value :number, :klass => :integer
 #     has_value :color, :default => 'yellow'
-#     has_collection :riders
+#     has_collection :riders, :alias => 'Passengers'
 #   
 #   end
 #
 #   >> Bus.attributes
 #   => [:number, :color, :riders]
-#   >> bus = Bus.new(:number => '3', :riders => ['GOF', 'Fowler', 'Mort']
+#   >> bus = Bus.new(:number => '3', :Passengers => ['GOF', 'Fowler', 'Mort']
 #   >> bus.attributes
 #   => {:number => 3, :riders => ['GOF', 'Fowler', 'Mort'], :color => 'yellow'}
+#   
 class Valuable
 
   # Returns a Hash representing all known values. Values are set three ways:
@@ -23,8 +24,9 @@ class Valuable
   #   (1) a default value
   #   (2) they were passed to the constructor
   #          Bus.new(:color => 'green')
-  #   (3) they were set via their namesake setter
+  #   (3) they were set via their namesake setter or alias setter
   #          bus.color = 'green'
+  #          bus.Passengers = ['bill', 'steve']
   #          
   # Values that have not been set and have no default not appear in this
   # collection. Their namesake attribute methods will respond with nil.
@@ -74,6 +76,10 @@ class Valuable
     #   :klass - light weight type casting. Use :integer, :string or
     #   :boolean. Alternately, supply a class. 
     #
+    #   :alias - creates a second setter with the specified name. This
+    #   allows you to accept information from some other party using their 
+    #   vocabulary. Alias does not currently create a getter.
+    #
     # When a :klassified attribute is set to some new value, if the value
     # is not nil and is not already of that class, the value will be cast
     # to the specified klass. In the case of :integer, it wil be done via
@@ -101,7 +107,8 @@ class Valuable
       create_question_for(name) if options[:klass] == :boolean
       create_negative_question_for(name, options[:negative]) if options[:klass] == :boolean && options[:negative]
       
-      create_setter_for(name, options[:klass])
+      create_setter_for(name, name, options[:klass])
+      create_setter_for(name, options[:alias], options[:klass]) if options[:alias]
 
       check_options_validity(name, options)
     end
@@ -110,44 +117,44 @@ class Valuable
     # is called both by the constructor. The constructor handles type
     # casting. Setting values via the attributes hash avoids the method
     # defined here.
-    def create_setter_for(name, klass)
+    def create_setter_for(attribute, method_name, klass)
 
       case klass
       when NilClass
 	      
-        define_method "#{name}=" do |value|
-          attributes[name] = value 
+        define_method "#{method_name}=" do |value|
+          attributes[attribute] = value 
         end
 
       when :integer
 
-        define_method "#{name}=" do |value|
+        define_method "#{method_name}=" do |value|
           value_as_integer = value && value.to_i
-          attributes[name] = value_as_integer
+          attributes[attribute] = value_as_integer
         end
 
       when :string
 	
-	define_method "#{name}=" do |value|
+	define_method "#{method_name}=" do |value|
           value_as_string = value && value.to_s
-          attributes[name] = value_as_string
+          attributes[attribute] = value_as_string
 	end
 
       when :boolean
 
-        define_method "#{name}=" do |value|
-          attributes[name] = value == '0' ? false : !!value
+        define_method "#{method_name}=" do |value|
+          attributes[attribute] = value == '0' ? false : !!value
 	end
     
       else
 
-        define_method "#{name}=" do |value|
+        define_method "#{method_name}=" do |value|
           if value.nil?
-            attributes[name] = nil 
+            attributes[attribute] = nil 
 	  elsif value.is_a? klass
-	    attributes[name] = value
+	    attributes[attribute] = value
 	  else
-	    attributes[name] = klass.new(value)
+	    attributes[attribute] = klass.new(value)
 	  end
         end
       end
@@ -216,7 +223,7 @@ class Valuable
     end
     
     def known_options
-     [:klass, :default, :negative]
+     [:klass, :default, :negative, :alias]
     end
 
     # this helper raises an exception if the options passed to has_value
