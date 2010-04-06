@@ -101,7 +101,7 @@ class Valuable
       create_question_for(name) if options[:klass] == :boolean
       create_negative_question_for(name, options[:negative]) if options[:klass] == :boolean && options[:negative]
       
-      create_setter_for(name, options[:klass], options[:default])
+      create_setter_for(name, options[:klass])
 
       check_options_validity(name, options)
     end
@@ -110,7 +110,7 @@ class Valuable
     # is called both by the constructor. The constructor handles type
     # casting. Setting values via the attributes hash avoids the method
     # defined here.
-    def create_setter_for(name, klass, default)
+    def create_setter_for(name, klass)
 
       case klass
       when NilClass
