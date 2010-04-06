@@ -42,11 +42,39 @@ class Valuable
   # accepts an optional hash that will be used to populate the 
   # predefined attributes for this class.
   def initialize(atts = nil)
-    atts.each { |name, value| __send__("#{name}=", value ) }  if atts
+    self.update_attributes(atts || {})
+  end
+
+  # mass assign attributes. This method will not clear any existing attributes.
+  #
+  # class Shoe
+  #   has_value :size
+  #   has_value :owner
+  #   has_value :color, :default => 'red'
+  # end
+  #
+  # >> shoe = Shoe.new
+  # >> shoe.update_attributes(:size => 16, :owner => 'MJ')
+  # >> shoe.attributes
+  # => {:size => 16, :owner => 'MJ', :color => 'red'}
+  def update_attributes(atts)
+    atts.each{|name, value| __send__("#{name}=", value )}
   end
 
   def deep_duplicate_of(value)
     Marshal.load(Marshal.dump(value))
+  end
+
+  def permissive?
+    self.class.permissive_constructor?
+  end
+
+  def method_missing(method_name, *args)
+    if method_name.to_s =~ /(\w+)=/
+      raise( ArgumentError, "#{self.class.to_s} does not have an attribute or alias '#{$1}'", caller) unless self.permissive?
+    else
+      raise
+    end
   end
 
   class << self
@@ -118,7 +146,6 @@ class Valuable
     # casting. Setting values via the attributes hash avoids the method
     # defined here.
     def create_setter_for(attribute, method_name, klass)
-
       case klass
       when NilClass
 	      
@@ -214,6 +241,37 @@ class Valuable
     def has_collection(name)
       has_value(name, :default => [] )
     end 
+
+    # Instructs the class NOT to complain if any attributes are set
+    # that haven't been declared.
+    #
+    # class Sphere < Valuable
+    #   has_value :material
+    # end
+    #
+    # >> Sphere.new(:radius => 3, :material => 'water')
+    # EXCEPTION! OH NOS!
+    #
+    # class Box < Valuable
+    #   acts_as_permissive
+    #
+    #   has_value :material
+    # end
+    #
+    # >> box = Box.new(:material => 'wood', :size => '36 x 40')
+    # >> box.attributes
+    # => {:material => 'wood'}
+    def acts_as_permissive
+      self.permissive_constructor=true
+    end
+
+    def permissive_constructor=(value)
+      @_permissive_constructor = value
+    end
+
+    def permissive_constructor?
+      !!(@_permissive_constructor ||= false)
+    end
 
     private
 

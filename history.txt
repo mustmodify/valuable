@@ -1,4 +1,4 @@
-2010-04-06 jw [0.8.2] - added :alias option, minor fixes
+2010-04-06 jw [0.8.2] - added :alias option, acts_as_permissive, minor fixes
 
 2009-07-06 jw [0.7.1] - Constructor should be able to handle being passed nil. Added history file, update to rakefile.
 
