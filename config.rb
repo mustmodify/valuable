@@ -1,4 +1,4 @@
 CONFIG = {
   :version => '0.8',
-  :name => 'Valuable'
+  :name => 'valuable'
   }
