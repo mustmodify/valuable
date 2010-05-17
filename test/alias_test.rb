@@ -19,4 +19,9 @@ class AliasTest < Test::Unit::TestCase
     software = Software.new('EnterpriseNamespace' => 'Enterprisey')
     assert_equal 'Enterprisey', software.enterprise_namespace
   end
+
+  def test_that_aliases_work_for_getters
+    software = Software.new(:title => 'ObtrusiveJavascriptComponent')
+    assert_equal 'ObtrusiveJavascriptComponent', software.name
+  end
 end

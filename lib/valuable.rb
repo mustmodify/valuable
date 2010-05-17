@@ -135,8 +135,10 @@ class Valuable
       create_question_for(name) if options[:klass] == :boolean
       create_negative_question_for(name, options[:negative]) if options[:klass] == :boolean && options[:negative]
       
-      create_setter_for(name, name, options[:klass])
-      create_setter_for(name, options[:alias], options[:klass]) if options[:alias]
+      create_setter_for(name, options[:klass])
+
+      alias_method options[:alias], name if options[:alias]
+      alias_method "#{options[:alias]}=", "#{name}=" if options[:alias]
 
       check_options_validity(name, options)
     end
@@ -145,37 +147,39 @@ class Valuable
     # is called both by the constructor. The constructor handles type
     # casting. Setting values via the attributes hash avoids the method
     # defined here.
-    def create_setter_for(attribute, method_name, klass)
+    def create_setter_for(attribute, klass)
+      setter_method = "#{attribute}="
+
       case klass
       when NilClass
 	      
-        define_method "#{method_name}=" do |value|
+        define_method setter_method do |value|
           attributes[attribute] = value 
         end
 
       when :integer
 
-        define_method "#{method_name}=" do |value|
+        define_method setter_method do |value|
           value_as_integer = value && value.to_i
           attributes[attribute] = value_as_integer
         end
 
       when :string
 	
-	define_method "#{method_name}=" do |value|
+	define_method setter_method do |value|
           value_as_string = value && value.to_s
           attributes[attribute] = value_as_string
 	end
 
       when :boolean
 
-        define_method "#{method_name}=" do |value|
+        define_method setter_method do |value|
           attributes[attribute] = value == '0' ? false : !!value
 	end
     
       else
 
-        define_method "#{method_name}=" do |value|
+        define_method setter_method do |value|
           if value.nil?
             attributes[attribute] = nil 
 	  elsif value.is_a? klass
