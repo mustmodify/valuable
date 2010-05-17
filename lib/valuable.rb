@@ -104,9 +104,7 @@ class Valuable
     #   :klass - light weight type casting. Use :integer, :string or
     #   :boolean. Alternately, supply a class. 
     #
-    #   :alias - creates a second setter with the specified name. This
-    #   allows you to accept information from some other party using their 
-    #   vocabulary. Alias does not currently create a getter.
+    #   :alias - creates an alias for getter and setter with the new name.
     #
     # When a :klassified attribute is set to some new value, if the value
     # is not nil and is not already of that class, the value will be cast
