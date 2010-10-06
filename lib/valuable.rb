@@ -139,8 +139,8 @@ class Valuable
       
       create_setter_for(name, options[:klass])
 
-      alias_method options[:alias], name if options[:alias]
-      alias_method "#{options[:alias]}=", "#{name}=" if options[:alias]
+      sudo_alias options[:alias], name if options[:alias]
+      sudo_alias "#{options[:alias]}=", "#{name}=" if options[:alias]
 
       check_options_validity(name, options)
     end
@@ -190,6 +190,12 @@ class Valuable
 	    write_attribute(attribute, klass.new(value))
 	  end
         end
+      end
+    end
+
+    def sudo_alias( alias_name, method_name )
+      define_method alias_name do |*atts|
+        send(method_name, *atts)
       end
     end
 
