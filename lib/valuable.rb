@@ -77,6 +77,10 @@ class Valuable
     end
   end
 
+  def write_attribute(name, value)
+    self.attributes[name.to_sym] = value
+  end
+
   class << self
 
     # Returns an array of the attributes available on this object.
@@ -152,38 +156,38 @@ class Valuable
       when NilClass
 	      
         define_method setter_method do |value|
-          attributes[attribute] = value 
+          write_attribute(attribute, value) 
         end
 
       when :integer
 
         define_method setter_method do |value|
           value_as_integer = value && value.to_i
-          attributes[attribute] = value_as_integer
+          write_attribute(attribute, value_as_integer)
         end
 
       when :string
 	
 	define_method setter_method do |value|
           value_as_string = value && value.to_s
-          attributes[attribute] = value_as_string
+          write_attribute(attribute, value_as_string)
 	end
 
       when :boolean
 
         define_method setter_method do |value|
-          attributes[attribute] = value == '0' ? false : !!value
+          write_attribute(attribute, value == '0' ? false : !!value )
 	end
     
       else
 
         define_method setter_method do |value|
           if value.nil?
-            attributes[attribute] = nil 
+            write_attribute(attribute, nil)
 	  elsif value.is_a? klass
-	    attributes[attribute] = value
+	    write_attribute(attribute, value)
 	  else
-	    attributes[attribute] = klass.new(value)
+	    write_attribute(attribute, klass.new(value))
 	  end
         end
       end
