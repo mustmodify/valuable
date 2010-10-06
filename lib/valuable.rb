@@ -73,7 +73,7 @@ class Valuable
     if method_name.to_s =~ /(\w+)=/
       raise( ArgumentError, "#{self.class.to_s} does not have an attribute or alias '#{$1}'", caller) unless self.permissive?
     else
-      raise
+      super 
     end
   end
 
