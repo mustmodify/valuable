@@ -59,6 +59,7 @@ class Valuable
   # => {:size => 16, :owner => 'MJ', :color => 'red'}
   def update_attributes(atts)
     atts.each{|name, value| __send__("#{name}=", value )}
+    self
   end
 
   def deep_duplicate_of(value)
