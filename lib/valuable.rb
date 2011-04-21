@@ -159,6 +159,22 @@ class Valuable
           write_attribute(attribute, value) 
         end
 
+      when :date
+
+        define_method setter_method do |value|
+          case value.class.to_s
+          when "Date"
+            write_attribute( attribute, value )
+          when "ActiveSupport::TimeWithZone", "Time", "DateTime"
+            write_attribute(attribute, value.to_date)
+          when "String"
+            value_as_datetime = value && DateTime.parse(value)
+            write_attribute(attribute, value_as_datetime)
+          else
+            write_attribute(attribute, value)
+          end
+        end
+
       when :integer
 
         define_method setter_method do |value|
