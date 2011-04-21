@@ -1,3 +1,35 @@
+- has_value :start_date, :default => {Date.today}
+- has_value :price, :default => 50, :extend => MoneyFormatter
+
+class SomeSearchThing < Valuable
+
+  has_value :dob
+  has_value :sign
+
+  parser_for( dob ) do |input|
+    Date.parse(input)
+  end
+
+end
+
+BEST PRACTICES DOC
+
+When creating a searcher:
+
+class UserSearcher < Valuable
+
+  has_value :age
+  has_value :query
+  has_value :expertise
+  has_value :eye_color
+
+  def conditions
+    [ eye_color_conditions, name_conditions, ... ].compact.join(' OR ')
+  end
+
+end
+
+
 - Rails 3 support
 - Add Valuable#to_yaml and Valuable.from_yaml
 - make it easy to include validatable or ActiveRecord::Validations
@@ -36,4 +68,17 @@ like this:
 
 
 
- 
+:klass => :decimal
+- When is decimal available? Only load then.
+- If calling :decimal and it hasn't loaded, error
+
+
+
+class Change < Decimal
+  extend Valuable::whatever or
+  extend Valuable
+
+  ...
+end
+
+- do a better job with method_missing 
