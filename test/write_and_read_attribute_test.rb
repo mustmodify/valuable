@@ -5,6 +5,7 @@ require 'valuable.rb'
 
 class Beer < Valuable
   has_value :name
+  has_value :brewery
 end
 
 class AliasTest < Test::Unit::TestCase
@@ -20,5 +21,18 @@ class AliasTest < Test::Unit::TestCase
     beer.write_attribute('name', 'Fosters')
     assert_equal 'Fosters', beer.name
   end
+
+  def test_that_values_can_be_set_using_newfangled_way
+    beer = Beer.new
+    beer.name('Abita Amber')
+    assert_equal 'Abita Amber', beer.name
+  end
+
+  def test_newfangled_fluid_chaining
+    beer = Beer.new
+    beer.name('Amber').brewery('Abita')
+    assert_equal 'Abita', beer.brewery
+  end
+
 end
 

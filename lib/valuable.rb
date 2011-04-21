@@ -218,8 +218,14 @@ class Valuable
     # creates a simple accessor method named after the attribute whose
     # value it will provide during the life of the instance.
     def create_accessor_for(name)
-      define_method name do
-        attributes[name]
+      define_method name do |*args|
+        
+        if args.length == 0 
+          attributes[name]
+        else
+          send("#{name}=", *args)
+          self
+        end 
       end
     end
 
