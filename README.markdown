@@ -10,7 +10,7 @@ Examples
 
 _basic syntax_
 
-      class Fruit
+      class Fruit < Valuable
         has_value :name
         has_collection :vitamins
       end
