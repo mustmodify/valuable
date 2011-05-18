@@ -84,8 +84,13 @@ class Valuable
   end
 
   def write_attribute(name, value)
-    name = name.to_sym
-    self.attributes[name] = Valuable::Utils.cast(name, value, self.class._attributes) 
+    attribute = Valuable::Utils.find_attribute_for( name, self.class._attributes )
+
+    if attribute
+      self.attributes[attribute] = Valuable::Utils.cast(attribute, value, self.class._attributes) 
+    else
+      raise( ArgumentError, "#{self.class.to_s} does not have an attribute or alias '#{name}'", caller) unless self.permissive?
+    end
   end
 
   class << self
@@ -183,8 +188,7 @@ class Valuable
       end
     end
 
-    # creates a simple accessor method named after the attribute whose
-    # value it will provide during the life of the instance.
+    # creates a simple accessor method named after the attribute
     def create_accessor_for(name)
       define_method name do |*args|
         
@@ -240,8 +244,27 @@ class Valuable
     #   >> bus.riders << 'jack'
     #   >> bus.riders
     #   => ['jack']
-    def has_collection(name)
-      has_value(name, :default => [] )
+    #
+    #   class Person
+    #     has_collection :phone_numbers, :klass => PhoneNumber
+    #   end
+    #
+    #   >> jenny = Person.new(:phone_numbers => ['8008675309'] )
+    #   >> jenny.phone_numbers.first.class
+    #   => PhoneNumber
+    def has_collection(name, options = {})
+      name = name.to_sym
+      options[:item_klass] = options[:klass] if options[:klass]
+      options[:klass] = :collection
+      options[:default] = []
+
+      _attributes[name] = options 
+      
+      create_accessor_for(name)
+      create_setter_for(name)
+
+      sudo_alias options[:alias], name if options[:alias]
+      sudo_alias "#{options[:alias]}=", "#{name}=" if options[:alias]
     end 
 
     # Instructs the class NOT to complain if any attributes are set

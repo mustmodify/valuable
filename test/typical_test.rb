@@ -3,8 +3,7 @@ $: << File.expand_path(File.dirname(__FILE__) + '/../lib')
 require 'test/unit'
 require 'valuable.rb'
 require 'date'
-require 'mocha'
-
+require File.dirname(__FILE__) + '/../examples/phone_number'
 class Person < Valuable
   has_value :dob, :klass => :date
 end
@@ -26,6 +25,15 @@ class TypicalTest < Test::Unit::TestCase
   def test_that_a_date_might_not_be_set_yet_and_that_can_be_ok
     dr_who = Person.new( :dob => nil )
     assert_nil( dr_who.dob )
+  end
+
+  def test_that_collections_are_typified
+    people = Class.new(Valuable)
+    people.has_collection( :phones, :klass => PhoneNumber )
+
+    person = people.new(:phones => ['8668675309'])
+    assert_kind_of( Array, person.phones )
+    assert_kind_of( PhoneNumber, person.phones.first )
   end
 end
 
