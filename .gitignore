@@ -1,3 +1,7 @@
-pkg
-.svn
 *.*~
+.bundle
+.rvmrc
+.svn
+pkg
+vendor
+Gemfile.lock
