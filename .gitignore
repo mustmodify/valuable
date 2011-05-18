@@ -2,6 +2,7 @@
 *.swp
 .bundle
 .rvmrc
+.irbrc
 .svn
 pkg
 vendor
