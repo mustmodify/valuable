@@ -75,15 +75,20 @@ class Valuable
   end
 
   def write_attribute(name, value)
-    self.attributes[name.to_sym] = value
+    name = name.to_sym
+    self.attributes[name] = Valuable::Utils.cast(name, value, self.class._attributes) 
   end
 
   class << self
 
     # Returns an array of the attributes available on this object.
     def attributes
-      @attributes ||= []
+      _attributes.keys
     end 
+
+    def _attributes
+      @_attributes ||= {}
+    end
 
     # Returns a name/value set of the values that will be used on
     # instanciation unless new values are provided.
@@ -91,7 +96,9 @@ class Valuable
     #   >> Bus.defaults
     #   => {:color => 'yellow'}
     def defaults
-      @defaults ||= {}
+      out = {}
+      _attributes.each{|n, atts| out[n] = atts[:default] unless atts[:default].nil?}
+      out
     end 
 
     # Decorator method that lets you specify the attributes for your
@@ -125,16 +132,13 @@ class Valuable
     def has_value(name, options={})
 
       name = name.to_sym
-      
-      attributes << name
-      
-      defaults[name] = options[:default] unless options[:default].nil?
+      _attributes[name] = options 
       
       create_accessor_for(name)
       create_question_for(name) if options[:klass] == :boolean
       create_negative_question_for(name, options[:negative]) if options[:klass] == :boolean && options[:negative]
       
-      create_setter_for(name, options[:klass])
+      create_setter_for(name)
 
       sudo_alias options[:alias], name if options[:alias]
       sudo_alias "#{options[:alias]}=", "#{name}=" if options[:alias]
@@ -146,64 +150,13 @@ class Valuable
     # is called both by the constructor. The constructor handles type
     # casting. Setting values via the attributes hash avoids the method
     # defined here.
-    def create_setter_for(attribute, klass)
+    def create_setter_for(attribute)
       setter_method = "#{attribute}="
 
-      case klass
-      when NilClass
-	      
-        define_method setter_method do |value|
-          write_attribute(attribute, value) 
-        end
-
-      when :date
-
-        define_method setter_method do |value|
-          case value.class.to_s
-          when "Date"
-            write_attribute( attribute, value )
-          when "ActiveSupport::TimeWithZone", "Time", "DateTime"
-            write_attribute(attribute, value.to_date)
-          when "String"
-            value_as_datetime = value && DateTime.parse(value)
-            write_attribute(attribute, value_as_datetime)
-          else
-            write_attribute(attribute, value)
-          end
-        end
-
-      when :integer
-
-        define_method setter_method do |value|
-          value_as_integer = value && value.to_i
-          write_attribute(attribute, value_as_integer)
-        end
-
-      when :string
-	
-	define_method setter_method do |value|
-          value_as_string = value && value.to_s
-          write_attribute(attribute, value_as_string)
-	end
-
-      when :boolean
-
-        define_method setter_method do |value|
-          write_attribute(attribute, value == '0' ? false : !!value )
-	end
-    
-      else
-
-        define_method setter_method do |value|
-          if value.nil?
-            write_attribute(attribute, nil)
-	  elsif value.is_a? klass
-	    write_attribute(attribute, value)
-	  else
-	    write_attribute(attribute, klass.new(value))
-	  end
-        end
+      define_method setter_method do |value|
+        write_attribute(attribute, value)
       end
+
     end
 
     def sudo_alias( alias_name, method_name )
@@ -307,8 +260,7 @@ class Valuable
     private
 
     def inherited(child)
-      attributes.each {|att| child.attributes << att }
-      defaults.each {|(name, value)| child.defaults[name] = value }
+      _attributes.each {|n, atts| child._attributes[n] = atts }
     end
     
     def known_options
