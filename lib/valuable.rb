@@ -36,7 +36,7 @@ class Valuable
   #   >> bus.attributes
   #   => {:color => 'yellow', :number => 16}
   def attributes
-    @attributes ||= deep_duplicate_of(self.class.defaults) 
+    @attributes ||= Valuable::Utils.deep_duplicate_of(self.class.defaults) 
   end
 
   # accepts an optional hash that will be used to populate the 
@@ -60,10 +60,6 @@ class Valuable
   def update_attributes(atts)
     atts.each{|name, value| __send__("#{name}=", value )}
     self
-  end
-
-  def deep_duplicate_of(value)
-    Marshal.load(Marshal.dump(value))
   end
 
   def permissive?
@@ -331,3 +327,5 @@ class Valuable
   end
 
 end
+
+require 'valuable/utils'
