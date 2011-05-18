@@ -43,7 +43,7 @@ class TypicalTest < Test::Unit::TestCase
     end
   end
 
-  def test_that_collections_are_typified
+  def test_that_decimals_typified
     chemical = Class.new(Valuable)
     chemical.has_value :ph, :klass => :decimal
     lemon_juice = chemical.new(:ph => 1.8)
