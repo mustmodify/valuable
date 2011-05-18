@@ -51,14 +51,23 @@ class Valuable
   #   has_value :size
   #   has_value :owner
   #   has_value :color, :default => 'red'
+  #
+  #   def big_feet?
+  #     size && size > 15
+  #   end
   # end
   #
   # >> shoe = Shoe.new
   # >> shoe.update_attributes(:size => 16, :owner => 'MJ')
   # >> shoe.attributes
   # => {:size => 16, :owner => 'MJ', :color => 'red'}
+  #
+  # can be method-chained
+  #
+  # >> Shoe.new.update_attributes(:size => 16).big_feet?
+  # => true
   def update_attributes(atts)
-    atts.each{|name, value| __send__("#{name}=", value )}
+    atts.each{|name, value| write_attribute(name, value )}
     self
   end
 
@@ -146,10 +155,19 @@ class Valuable
       check_options_validity(name, options)
     end
 
-    # Creates the method that sets the value of an attribute. This setter
-    # is called both by the constructor. The constructor handles type
-    # casting. Setting values via the attributes hash avoids the method
-    # defined here.
+    # Creates the method that sets the value of an attribute.
+    # It calls write_attribute, which handles the "type casting"
+    # aka formatting.
+    #
+    # Setting values via the attributes hash avoids casting.
+    #
+    # >> player.phone = "8778675309"
+    # >> player.phone
+    # => "(877) 867-5309"
+    #
+    # >> player.attributes[:phone] = "8778675309"
+    # >> player.phone
+    # => "8778675309"
     def create_setter_for(attribute)
       setter_method = "#{attribute}="
 
