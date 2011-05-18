@@ -8,6 +8,10 @@ class Person < Valuable
   has_value :dob, :klass => :date
 end
 
+class Chemical < Valuable
+  has_value :ph, :klass => :decimal
+end
+
 class TypicalTest < Test::Unit::TestCase
 
   def test_that_dates_can_be_set_directly
@@ -44,10 +48,13 @@ class TypicalTest < Test::Unit::TestCase
   end
 
   def test_that_decimals_typified
-    chemical = Class.new(Valuable)
-    chemical.has_value :ph, :klass => :decimal
-    lemon_juice = chemical.new(:ph => 1.8)
+    lemon_juice = Chemical.new(:ph => 1.8)
     assert_kind_of BigDecimal, lemon_juice.ph
+  end
+
+  def test_that_nil_input_is_preserved_for_decimals
+    lemon_juice = Chemical.new(:ph => nil)
+    assert_equal nil, lemon_juice.ph
   end
 end
 

@@ -52,6 +52,8 @@ module Valuable::Utils
       when :decimal
 
         case value
+        when NilClass
+          nil
         when BigDecimal
           value
         else
