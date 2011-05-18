@@ -67,7 +67,7 @@ class Valuable
   # >> Shoe.new.update_attributes(:size => 16).big_feet?
   # => true
   def update_attributes(atts)
-    atts.each{|name, value| write_attribute(name, value )}
+    atts.each{|name, value| __send__("#{name}=", value )}
     self
   end
 
@@ -161,11 +161,13 @@ class Valuable
     end
 
     # Creates the method that sets the value of an attribute.
-    # It calls write_attribute, which handles the "type casting"
-    # aka formatting.
+    # The setter calls write_attribute, which handles typicification.
+    # It is called by the constructor (rather than using
+    # write attribute, which would render any custom setters
+    # ineffective.)
     #
-    # Setting values via the attributes hash avoids casting.
-    #
+    # Setting values via the attributes hash avoids typification,
+    # ie:
     # >> player.phone = "8778675309"
     # >> player.phone
     # => "(877) 867-5309"
