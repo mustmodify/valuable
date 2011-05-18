@@ -1,3 +1,5 @@
+require 'bigdecimal'
+
 module Valuable::Utils
   class << self
 
@@ -47,6 +49,15 @@ module Valuable::Utils
 
         value && value.to_i
 
+      when :decimal
+
+        case value
+        when BigDecimal
+          value
+        else
+          BigDecimal.new( value.to_s )
+        end
+  
       when :string
         
         value && value.to_s
@@ -70,7 +81,7 @@ module Valuable::Utils
     end
     
     def klass_options
-      [NilClass, :date, :integer, :string, :boolean, Class]
+      [NilClass, :integer, Class, :date, :decimal, :string, :boolean]
     end
 
     def known_options

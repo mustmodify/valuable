@@ -42,5 +42,12 @@ class TypicalTest < Test::Unit::TestCase
       animal.has_value :species, :klass => :invalid
     end
   end
+
+  def test_that_collections_are_typified
+    chemical = Class.new(Valuable)
+    chemical.has_value :ph, :klass => :decimal
+    lemon_juice = chemical.new(:ph => 1.8)
+    assert_kind_of BigDecimal, lemon_juice.ph
+  end
 end
 
