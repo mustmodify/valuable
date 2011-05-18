@@ -35,5 +35,12 @@ class TypicalTest < Test::Unit::TestCase
     assert_kind_of( Array, person.phones )
     assert_kind_of( PhoneNumber, person.phones.first )
   end
+
+  def test_that_it_discovers_an_invalid_klass
+    animal = Class.new(Valuable)
+    assert_raises ArgumentError, "Animal doesn't know how to format species with :klass => 'invalid'" do
+      animal.has_value :species, :klass => :invalid
+    end
+  end
 end
 

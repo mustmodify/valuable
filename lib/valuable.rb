@@ -144,6 +144,7 @@ class Valuable
     # Due to the way Rails handles checkboxes, '0' resolves to FALSE,
     # though it would normally resolve to TRUE.
     def has_value(name, options={})
+      Valuable::Utils.check_options_validity(self.class.name, name, options)
 
       name = name.to_sym
       _attributes[name] = options 
@@ -156,8 +157,6 @@ class Valuable
 
       sudo_alias options[:alias], name if options[:alias]
       sudo_alias "#{options[:alias]}=", "#{name}=" if options[:alias]
-
-      check_options_validity(name, options)
     end
 
     # Creates the method that sets the value of an attribute.
@@ -255,6 +254,7 @@ class Valuable
     #   >> jenny.phone_numbers.first.class
     #   => PhoneNumber
     def has_collection(name, options = {})
+      Utils.check_options_validity( self.class.name, name, options)
       name = name.to_sym
       options[:item_klass] = options[:klass] if options[:klass]
       options[:klass] = :collection
@@ -305,22 +305,7 @@ class Valuable
     def inherited(child)
       _attributes.each {|n, atts| child._attributes[n] = atts }
     end
-    
-    def known_options
-     [:klass, :default, :negative, :alias]
-    end
-
-    # this helper raises an exception if the options passed to has_value
-    # are wrong. Mostly written because I occasionally used :class instead
-    # of :klass and, being a moron, wasted time trying to find the issue. 
-    def check_options_validity(name, options)
-      invalid_options = options.keys - known_options 
-
-      raise ArgumentError, "has_value did not know how to respond to option(s) #{invalid_options.join(', ')}. Valid (optional) arguments are: #{known_options.join(', ')}" unless invalid_options.empty?      
-    end
-
   end
-
 end
 
 require 'valuable/utils'

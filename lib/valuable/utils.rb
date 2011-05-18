@@ -68,6 +68,25 @@ module Valuable::Utils
       end
 
     end
+    
+    def klass_options
+      [NilClass, :date, :integer, :string, :boolean, Class]
+    end
+
+    def known_options
+     [:klass, :default, :negative, :alias]
+    end
+
+    # this helper raises an exception if the options passed to has_value
+    # are wrong. Mostly written because I occasionally used :class instead
+    # of :klass and, being a moron, wasted time trying to find the issue.
+    def check_options_validity( class_name, attribute, options )
+      invalid_options = options.keys - known_options
+
+      raise ArgumentError, "has_value did not know how to respond to option(s) #{invalid_options.join(', ')}. Valid (optional) arguments are: #{known_options.join(', ')}" unless invalid_options.empty?    
+
+      raise ArgumentError, "#{class_name} doesn't know how to format #{attribute} with :klass => #{options[:klass].inspect}" unless klass_options.any?{|klass| klass === options[:klass]}
+    end
   end
 end
 
