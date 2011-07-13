@@ -169,11 +169,11 @@ class BaseTest < Test::Unit::TestCase
   end
 
   def test_that_boolean_values_get_questionmarked_methods
-    assert Developer.instance_methods.include?('employed?')
+    assert Developer.instance_methods.map(&:to_sym).include?(:employed?)
   end
 
   def test_that_boolean_values_get_negative_methods
-    assert Developer.instance_methods.include?('unemployed?')
+    assert Developer.instance_methods.map(&:to_sym).include?(:unemployed?)
   end
 
   def test_that_negative_methods_are_negative
