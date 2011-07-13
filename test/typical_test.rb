@@ -3,7 +3,7 @@ $: << File.expand_path(File.dirname(__FILE__) + '/../lib')
 require 'test/unit'
 require 'valuable.rb'
 require 'date'
-require File.dirname(__FILE__) + '/../examples/phone_number'
+require File.expand_path(File.dirname(__FILE__) + '/../examples/phone_number')
 class Person < Valuable
   has_value :dob, :klass => :date
 end
