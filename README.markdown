@@ -1,9 +1,65 @@
 Introducing Valuable
 ====================
 
-Valuable enables quick modeling... it's attr_accessor on steroids.  It intends to use a simple and intuitive interface, allowing you easily create models without hassles, so you can get on with the logic specific to your application. I find myself using it in sort of a presenter capacity, when I have to pull data from non-standard data sources, and to handle temporary data during imports.
+Valuable enables quick modeling... it's attr_accessor on steroids.  For all those times you wanted to use OO to model something but it seemed like too much of a pain, try Valuable. Its simple interface allows you to model without hassles, so you can get on with the logic specific to your application.
 
-Valuable provides DRY decoration like attr_accessor, but includes default values, light weight type casting and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
+Frequent Uses:
+
+**pre-refactor modeling** to model a class you want to abstract but know would be a pain... as in, "I would love to pull Appointment out of this WorkOrder class, but since that isn't going to happen soon, let me quickly create WorkOrder.appointments... I can then create Appointment\#to\_s, appointment.end_time, appointment.duration, etc. I can use that to facilitate emitting XML or doing something with views, rather than polluting WorkOrder with appointment-related logic." 
+
+**as a presenter** as in, "I need to take in a few different models to generate this map... I need a class that models the integration, but I don't need to persist that to a database."
+
+**creating models from non-standard data sources** to keep data from non-standard data sources in memory during an import or to render data from an API call.
+
+Valuable provides DRY decoration like attr_accessor, but includes default values and other formatting (like, "2" => 2), and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
+
+Type Casting in Ruby? You must be crazy...
+-------------------------------------------------------------
+Yeah, I get that alot. I mean, about type casting. I'm not writing
+C# over here. Rails does it, they just don't call it type casting,
+so no one complains when they pass in "2" as a parameter and mysteriously
+it ends up as an integer. In fact, I'm going to start using the euphamism
+'Formatting' just so people will stop looking at me that way.
+
+Say you're getting information for a directory from a web service via JSON:
+
+      class Person < Valuable
+        has_value :name
+        has_value :age, :klass => :integer
+        has_value :phone_number, :klass => PhoneNumber
+               # see /examples/phone_number.rb
+
+      'person' =>
+        'name' => 'Mr. Freud',
+        'age' => "344",
+        'phone_number' => '8002195642',
+        'specialization_code' => "2106"
+
+you'll end up with this:
+
+      >> p = Person.new(params[:person])
+
+      >> p.age
+      => 344
+
+      >> p.phone_number
+      => (337) 326-3121
+
+      >> p.phone_number.class
+      => PhoneNumber
+
+      "Yeah, I could have just done that myself."
+      "Right, but now you don't have to."
+
+Default Values
+--------------
+Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default.
+
+When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it.
+
+If a value having a default is set to null after it is constructed, it will NOT be set to the default.
+
+If there is no default value, the result will be nil, EVEN if type casting is provided. Thus, a field typically cast as an Integer can be nil. See calculation of average.
 
 Examples
 -------
@@ -45,7 +101,7 @@ _setting a value to nil overrides the default._
       >> Developer.new(:name => 'KDD', :nickname => nil).nickname
       => nil
 
-_light weight type casting_
+_formatting aka light-weight type-casting_
 
       class BaseballPlayer < Valuable
 
@@ -65,6 +121,59 @@ _light weight type casting_
       >> joe.average
       => 0.25
 
+      # Currently supports:
+      # - integer
+      # - decimal ( casts to BigDecimal... NOTE: nil remains nil, not 0 as in nil.to_i )
+      # - string
+      # - boolean ( NOTE: '0' casts to FALSE... I would be fascinated to know when this is not the correct behavior. )
+      # - or any class ( formats as SomeClass.new( ) unless value.is_a?( SomeClass ) )
+
+
+_collections_
+
+      class MailingList < Valuable
+        has_collection :emails
+      end
+
+      >> m = MailingList.new
+
+      >> m.emails
+      => []
+
+      >> m = MailingList.new(:emails => [ 'johnathon.e.wright@nasa.gov', 'other.people@wherever.com' ])
+
+      => m.emails
+      >> [ 'johnathon.e.wright@nasa.gov', 'other.people@wherever.com' ]
+
+_formatting collections_
+
+      class Player < Valuable
+        has_value :first_name
+        has_value :last_name
+        has_value :salary
+      end
+        
+      class Team < Valuable
+        has_value :name
+        has_value :long_name
+
+        has_collection :players, :klass => Player
+      end
+ 
+      t = Team.new(:name => 'Toronto', :long_name => 'The Toronto Blue Jays', 
+               'players' => [
+                    {'first_name' => 'Chad', 'last_name' => 'Beck', :salary => 'n/a'},
+                    {'first_name' => 'Shawn', 'last_name' => 'Camp', :salary => '2250000'},
+                    {'first_name' => 'Brett', 'last_name' => 'Cecil', :salary => '443100'},
+                    Player.new(:first_name => 'Travis', :last_name => 'Snider', :salary => '435800')
+                  ])
+
+      >> t.players.first
+      => #<Player:0x7fa51e4a1da0 @attributes={:salary=>"n/a", :first_name=>"Chad", :last_name=>"Beck"}>
+
+      >> t.players.last
+      => #<Player:0x7fa51ea6a9f8 @attributes={:salary=>"435800", :first_name=>"Travis", :last_name=>"Snider"}>
+
 _aliases_
 
       # This example requires active_support because of Hash.from_xml
@@ -75,21 +184,11 @@ _aliases_
 
       >> xml = '<software><Title>Windows XP</Title></software>'
 
-      >> xp = Software.new(:Title => Hash.from_xml(xml)['software'])
+      >> xp = Software.new(Hash.from_xml(xml)['software'])
 
       >> xp.name
       => "Windows XP"
 
-
-_I find myself using classes to format things... ( PhoneNumber is provided in `/examples` )_
-
-      class School < Valuable
-        has_value :name
-        has_value :phone, :klass => PhoneNumber
-      end
-
-      >> School.new(:name => 'Vanderbilt', :phone => '3332223333').phone
-      => '(333) 222-3333'
 
 _as a presenter in Rails_
 
@@ -108,13 +207,13 @@ _as a presenter in Rails_
         def events
           Event.find(:all, :conditions => event_conditions)
         end
-        
+
         def event_conditions
           ['starts_at between ? and ?', start_date, end_date]
         end
       end
 
-_this class might appear in a controller like this:_
+this class might appear in a controller like this:
 
       class CalendarController < ApplicationController
         def show
@@ -122,7 +221,7 @@ _this class might appear in a controller like this:_
         end
       end
 
-_but it's easier to understand like this:_
+but it's easier to understand like this:
 
       >> @presenter = CalendarPresenter.new({}) # first pageload
 
@@ -133,7 +232,7 @@ _but it's easier to understand like this:_
       => Thu, 31 Dec 2009
 
       >> # User selects some other month and year; the next request looks like...
-      
+
       >> @presenter = CalendarPresenter.new({:month => '2', :year => '2002'})
 
       >> @presenter.start_date
@@ -157,7 +256,7 @@ _you can access the attributes via the attributes hash. Only default and specifi
       >> elvis = Person.new(:name => 'The King')
 
       >> elvis.attributes
-      => {:name=>"The King", :is_developer=>false}      
+      => {:name=>"The King", :is_developer=>false}
 
       >> elvis.attributes[:name]
       => "The King"
@@ -166,20 +265,8 @@ _you can access the attributes via the attributes hash. Only default and specifi
       => nil
 
 _also, you can get a list of all the defined attributes from the class_
-      
+
       >> Person.attributes
       => [:name, :is_developer, :ssn]
 
-Default Values
---------------
-Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default. 
 
-When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it.
-
-If a value having a default is set to null after it is constructed, it will NOT be set to the default.
-
-If there is no default value, the result will be nil, EVEN if type casting is provided. Thus, a field typically cast as an Integer can be nil. See calculation of average.
-
-KLASS-ification
----------------
-`:integer`, `:string` and `:boolean` use `to_i`, `to_s` and `!!` respectively. All other klasses use `klass.new(value)` unless the value `is_a?(klass)`, in which case it is unmolested. Nils are never klassified. In the example above, hits, which is an integer, is `nil` if not set, rather than `nil.to_i = 0`.

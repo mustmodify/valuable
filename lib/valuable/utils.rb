@@ -1,3 +1,5 @@
+# Trying to extract as much logic as possible to minimize the memory
+# footprint of individual instances. Feedback welcome.
 require 'bigdecimal'
 
 module Valuable::Utils
