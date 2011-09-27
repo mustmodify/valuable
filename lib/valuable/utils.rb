@@ -19,7 +19,7 @@ module Valuable::Utils
       Marshal.load(Marshal.dump(value))
     end
 
-    def cast( name, value, attributes, collection_item = false )
+    def format( name, value, attributes, collection_item = false )
       klass = collection_item ? attributes[name][:item_klass] : attributes[name][:klass]
 
       case klass
@@ -30,7 +30,7 @@ module Valuable::Utils
       when :collection
         if( value.kind_of?(Array) )
           out = value.map do |item|
-            Valuable::Utils.cast( name, item, attributes, true )
+            Valuable::Utils.format( name, item, attributes, true )
           end
         end
 

@@ -87,7 +87,7 @@ class Valuable
     attribute = Valuable::Utils.find_attribute_for( name, self.class._attributes )
 
     if attribute
-      self.attributes[attribute] = Valuable::Utils.cast(attribute, value, self.class._attributes) 
+      self.attributes[attribute] = Valuable::Utils.format(attribute, value, self.class._attributes) 
     else
       raise( ArgumentError, "#{self.class.to_s} does not have an attribute or alias '#{name}'", caller) unless self.permissive?
     end
