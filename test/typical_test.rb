@@ -12,6 +12,10 @@ class Chemical < Valuable
   has_value :ph, :klass => :decimal
 end
 
+class Event < Valuable
+  has_value :time, :klass => DateTime, :formatter => :parse
+end
+
 class TypicalTest < Test::Unit::TestCase
 
   def test_that_dates_can_be_set_directly
@@ -55,6 +59,12 @@ class TypicalTest < Test::Unit::TestCase
   def test_that_nil_input_is_preserved_for_decimals
     lemon_juice = Chemical.new(:ph => nil)
     assert_equal nil, lemon_juice.ph
+  end
+
+  def test_that_value_is_set_by_custom_formatter
+    party = Event.new :time => "1-November-2011 12:7:53"
+    assert_kind_of( DateTime, party.time )
+    assert_equal( DateTime.civil(2011, 11, 1, 12, 7, 53), party.time )
   end
 end
 

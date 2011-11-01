@@ -77,7 +77,7 @@ module Valuable::Utils
         elsif value.is_a? klass
           value
         else
-          klass.new(value)
+          klass.send(attributes[name][:formatter] || :new, value)
         end
 
       end
@@ -89,7 +89,7 @@ module Valuable::Utils
     end
 
     def known_options
-     [:klass, :default, :negative, :alias]
+     [:klass, :default, :negative, :alias, :formatter]
     end
 
     # this helper raises an exception if the options passed to has_value
