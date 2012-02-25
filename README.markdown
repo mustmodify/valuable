@@ -128,6 +128,63 @@ _formatting aka light-weight type-casting_
       # - boolean ( NOTE: '0' casts to FALSE... I would be fascinated to know when this is not the correct behavior. )
       # - or any class ( formats as SomeClass.new( ) unless value.is_a?( SomeClass ) )
 
+_advanced parsing of input_
+
+Sometimes, .to_s isn't enough... the architypical example being Date.parse(value). In these cases, you can specify what class-level method should be used to process the input.
+
+      require 'date'
+
+      class Person < Valuable
+        has_value :date_of_birth, :alias => :dob, :klass => Date, :parse_with => :parse
+
+        def age_in_days
+          Date.today - dob
+        end
+      end
+
+      >> sammy = Person.new(:dob => '2012-02-17')
+      >> sammy.age_in_days
+      => Rational(8, 1)
+
+or use it to load associated data from an exising set...
+
+      class Planet < Valuable
+        has_value :name
+        has_value :spaceport
+
+        def Planet.list
+          @list ||= []
+        end
+
+        def Planet.find_by_name( needle )
+          list.find{|i| i.name == needle }
+        end
+      end
+
+      class Spaceship < Valuable
+        has_value :name
+        has_value :home, :klass => Planet, :parse_with => :find_by_name
+      end
+
+      Planet.list << Planet.new(:name => 'Earth', :spaceport => 'KSC')
+      Planet.list << Planet.new(:name => 'Mars', :spaceport => 'Olympus Mons')
+
+      >> vger = Spaceship.new( :name => "V'ger", :home => 'Earth')
+      >> vger.home.spaceport
+      => 'KSC'
+
+you can also provide a lambda
+
+      require 'active_support'
+
+      class Movie < Valuable
+        has_value :title, :parse_with => lambda{|x| x.titleize}
+      end
+
+      >> best_movie_ever = Movie.new(:title => 'the usual suspects')
+
+      >> best_movie_ever.title
+      => "The Usual Suspects"
 
 _collections_
 
@@ -173,6 +230,12 @@ _formatting collections_
 
       >> t.players.last
       => #<Player:0x7fa51ea6a9f8 @attributes={:salary=>"435800", :first_name=>"Travis", :last_name=>"Snider"}>
+
+parse_with parses each item in a collection...
+
+      class Roster < Valuable
+        has_collection :players, :klass => Player, :parse_with => :find_by_name
+      end
 
 _aliases_
 

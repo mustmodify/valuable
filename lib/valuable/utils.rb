@@ -25,7 +25,11 @@ module Valuable::Utils
       case klass
       when NilClass
 
-        value
+        if Proc === attributes[name][:parse_with]
+          attributes[name][:parse_with].call(value)
+        else
+          value
+        end
 
       when :collection
         if( value.kind_of?(Array) )
@@ -77,7 +81,7 @@ module Valuable::Utils
         elsif value.is_a? klass
           value
         else
-          klass.new(value)
+          klass.send( attributes[name][:parse_with] || :new, value)
         end
 
       end
@@ -89,7 +93,7 @@ module Valuable::Utils
     end
 
     def known_options
-     [:klass, :default, :negative, :alias]
+      [:klass, :default, :negative, :alias, :parse_with]
     end
 
     # this helper raises an exception if the options passed to has_value
@@ -101,6 +105,8 @@ module Valuable::Utils
       raise ArgumentError, "has_value did not know how to respond to option(s) #{invalid_options.join(', ')}. Valid (optional) arguments are: #{known_options.join(', ')}" unless invalid_options.empty?    
 
       raise ArgumentError, "#{class_name} doesn't know how to format #{attribute} with :klass => #{options[:klass].inspect}" unless klass_options.any?{|klass| klass === options[:klass]}
+
+      raise( ArgumentError, "#{class_name} can't promise to return a(n) #{options[:klass]} when using :parse_with" ) if options[:klass].is_a?( Symbol ) && options[:parse_with]
     end
   end
 end
