@@ -53,13 +53,15 @@ you'll end up with this:
 
 Default Values
 --------------
-Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default.
+Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default. Default values are populated on instanciation.
 
 When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it.
 
 If a value having a default is set to null after it is constructed, it will NOT be set to the default.
 
 If there is no default value, the result will be nil, EVEN if type casting is provided. Thus, a field typically cast as an Integer can be nil. See calculation of average.
+
+The :default option will accept a lambda and call it on instanciation.
 
 Examples
 -------
@@ -125,8 +127,25 @@ _formatting aka light-weight type-casting_
       # - integer
       # - decimal ( casts to BigDecimal... NOTE: nil remains nil, not 0 as in nil.to_i )
       # - string
-      # - boolean ( NOTE: '0' casts to FALSE... I would be fascinated to know when this is not the correct behavior. )
+      # - boolean ( NOTE: '0' casts to FALSE... This isn't intuitive, but I would be fascinated to know when this is not the correct behavior. )
       # - or any class ( formats as SomeClass.new( ) unless value.is_a?( SomeClass ) )
+
+_advanced defaults_
+
+      class Borg < Valuable
+        cattr_accessor :count
+        has_value :position, :default => lambda { Borg.count += 1 }
+      
+        def designation
+          "#{self.position} of #{Borg.count}"
+        end
+      end
+
+      >> Borg.count = 6
+      >> seven = Borg.new
+      >> Borg.count = 9
+      >> seven.designation
+      => '7 of 9'
 
 _advanced parsing of input_
 

@@ -19,29 +19,39 @@
 #   
 class Valuable
 
-  # Returns a Hash representing all known values. Values are set three ways:
+  # Returns a Hash representing all known values. Values are set four ways:
   # 
-  #   (1) a default value
+  #   (1) Default values are set on instanciation, ie Person.new
   #   (2) they were passed to the constructor
   #          Bus.new(:color => 'green')
   #   (3) they were set via their namesake setter or alias setter
   #          bus.color = 'green'
   #          bus.Passengers = ['bill', 'steve']
-  #          
+  #   (4) the write_attributes(key, value) method
+  # 
   # Values that have not been set and have no default not appear in this
   # collection. Their namesake attribute methods will respond with nil.
-  # Always use symbols to access these values.
-  # 
+  # Always use symbols to access these values, ie:
+  #   Person.attributes[:color]
+  # not
+  #   Person.attributes['color']
+  #
+  # basic usage: 
   #   >> bus = Bus.new(:number => 16) # color has default value 'yellow'
   #   >> bus.attributes
   #   => {:color => 'yellow', :number => 16}
   def attributes
-    @attributes ||= Valuable::Utils.deep_duplicate_of(self.class.defaults) 
+    @attributes
+  end
+
+  def initialize_attributes
+    @attributes ||= Valuable::Utils.initial_copy_of_attributes(self.class.defaults) 
   end
 
   # accepts an optional hash that will be used to populate the 
   # predefined attributes for this class.
   def initialize(atts = nil)
+    initialize_attributes
     self.update_attributes(atts || {})
   end
 

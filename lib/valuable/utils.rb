@@ -15,6 +15,20 @@ module Valuable::Utils
       end
     end
 
+    def initial_copy_of_attributes(atts)
+      out = {}
+      atts.each do |name, value|
+        case value
+        when Proc
+          out[name] = value.call
+        else
+          out[name] = deep_duplicate_of( value )
+        end
+      end
+
+      out
+    end
+
     def deep_duplicate_of(value)
       Marshal.load(Marshal.dump(value))
     end
