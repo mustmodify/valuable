@@ -1,9 +1,12 @@
 Introducing Valuable
 ====================
 
-Valuable enables quick modeling... it's attr_accessor on steroids.  For all those times you wanted to use OO to model something but it seemed like too much of a pain, try Valuable. Its simple interface allows you to model without hassles, so you can get on with the logic specific to your application.
+Valuable enables quick modeling... it's attr_accessor on steroids.  Its simple interface allows you to build, change and discard models without hassles, so you can get on with the logic specific to your application.
 
-Frequent Uses:
+Valuable provides DRY decoration like attr_accessor, but includes default values and other formatting (like, "2" => 2), and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
+
+Frequent Uses
+-------------
 
 **pre-refactor modeling** to model a class you want to abstract but know would be a pain... as in, "I would love to pull Appointment out of this WorkOrder class, but since that isn't going to happen soon, let me quickly create WorkOrder.appointments... I can then create Appointment\#to\_s, appointment.end_time, appointment.duration, etc. I can use that to facilitate emitting XML or doing something with views, rather than polluting WorkOrder with appointment-related logic." 
 
@@ -11,10 +14,8 @@ Frequent Uses:
 
 **creating models from non-standard data sources** to keep data from non-standard data sources in memory during an import or to render data from an API call.
 
-Valuable provides DRY decoration like attr_accessor, but includes default values and other formatting (like, "2" => 2), and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
-
 Type Casting in Ruby? You must be crazy...
--------------------------------------------------------------
+------------------------------------------
 Yeah, I get that alot. I mean, about type casting. I'm not writing
 C# over here. Rails does it, they just don't call it type casting,
 so no one complains when they pass in "2" as a parameter and mysteriously
@@ -48,25 +49,11 @@ you'll end up with this:
       >> p.phone_number.class
       => PhoneNumber
 
-      "Yeah, I could have just done that myself."
-      "Right, but now you don't have to."
+"Yeah, I could have just done that myself."
+"Right, but now you don't have to."
 
-Default Values
---------------
-Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default. Default values are populated on instanciation.
-
-When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it.
-
-If a value having a default is set to null after it is constructed, it will NOT be set to the default.
-
-If there is no default value, the result will be nil, EVEN if type casting is provided. Thus, a field typically cast as an Integer can be nil. See calculation of average.
-
-The :default option will accept a lambda and call it on instanciation.
-
-Examples
--------
-
-_basic syntax_
+Basic Syntax
+------------
 
       class Fruit < Valuable
         has_value :name
@@ -84,6 +71,16 @@ _constructor accepts an attributes hash_
       => []
 
 _default values_
+
+Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default. Default values are populated on instanciation.
+
+When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it.
+
+If a value having a default is set to null after it is constructed, it will NOT be set to the default.
+
+If there is no default value, the result will be nil, EVEN if type casting is provided. Thus, a field typically cast as an Integer can be nil. See calculation of average.
+
+The :default option will accept a lambda and call it on instanciation.
 
       class Developer
         has_value :name
@@ -103,7 +100,25 @@ _setting a value to nil overrides the default._
       >> Developer.new(:name => 'KDD', :nickname => nil).nickname
       => nil
 
-_formatting aka light-weight type-casting_
+_aliases_
+
+      # This example requires active_support because of Hash.from_xml
+
+      class Software < Valuable
+        has_value :name, :alias => 'Title'
+      end
+
+      >> xml = '<software><Title>Windows XP</Title></software>'
+
+      >> xp = Software.new(Hash.from_xml(xml)['software'])
+
+      >> xp.name
+      => "Windows XP"
+
+
+Formatting Input
+----------------
+_aka light-weight type-casting_
 
       class BaseballPlayer < Valuable
 
@@ -130,82 +145,8 @@ _formatting aka light-weight type-casting_
       # - boolean ( NOTE: '0' casts to FALSE... This isn't intuitive, but I would be fascinated to know when this is not the correct behavior. )
       # - or any class ( formats as SomeClass.new( ) unless value.is_a?( SomeClass ) )
 
-_advanced defaults_
-
-      class Borg < Valuable
-        cattr_accessor :count
-        has_value :position, :default => lambda { Borg.count += 1 }
-      
-        def designation
-          "#{self.position} of #{Borg.count}"
-        end
-      end
-
-      >> Borg.count = 6
-      >> seven = Borg.new
-      >> Borg.count = 9
-      >> seven.designation
-      => '7 of 9'
-
-_advanced parsing of input_
-
-Sometimes, .to_s isn't enough... the architypical example being Date.parse(value). In these cases, you can specify what class-level method should be used to process the input.
-
-      require 'date'
-
-      class Person < Valuable
-        has_value :date_of_birth, :alias => :dob, :klass => Date, :parse_with => :parse
-
-        def age_in_days
-          Date.today - dob
-        end
-      end
-
-      >> sammy = Person.new(:dob => '2012-02-17')
-      >> sammy.age_in_days
-      => Rational(8, 1)
-
-or use it to load associated data from an exising set...
-
-      class Planet < Valuable
-        has_value :name
-        has_value :spaceport
-
-        def Planet.list
-          @list ||= []
-        end
-
-        def Planet.find_by_name( needle )
-          list.find{|i| i.name == needle }
-        end
-      end
-
-      class Spaceship < Valuable
-        has_value :name
-        has_value :home, :klass => Planet, :parse_with => :find_by_name
-      end
-
-      Planet.list << Planet.new(:name => 'Earth', :spaceport => 'KSC')
-      Planet.list << Planet.new(:name => 'Mars', :spaceport => 'Olympus Mons')
-
-      >> vger = Spaceship.new( :name => "V'ger", :home => 'Earth')
-      >> vger.home.spaceport
-      => 'KSC'
-
-you can also provide a lambda
-
-      require 'active_support'
-
-      class Movie < Valuable
-        has_value :title, :parse_with => lambda{|x| x.titleize}
-      end
-
-      >> best_movie_ever = Movie.new(:title => 'the usual suspects')
-
-      >> best_movie_ever.title
-      => "The Usual Suspects"
-
-_collections_
+Collections
+-----------
 
       class MailingList < Valuable
         has_collection :emails
@@ -256,78 +197,87 @@ parse_with parses each item in a collection...
         has_collection :players, :klass => Player, :parse_with => :find_by_name
       end
 
-_aliases_
+Advanced Defaults
+-----------------
 
-      # This example requires active_support because of Hash.from_xml
-
-      class Software < Valuable
-        has_value :name, :alias => 'Title'
-      end
-
-      >> xml = '<software><Title>Windows XP</Title></software>'
-
-      >> xp = Software.new(Hash.from_xml(xml)['software'])
-
-      >> xp.name
-      => "Windows XP"
-
-
-_as a presenter in Rails_
-
-      class CalenderPresenter < Valuable
-        has_value :month, :klass => Integer, :default => Time.now.month
-        has_value :year, :klass => Integer, :default => Time.now.year
-
-        def start_date
-          Date.civil( year, month, 1)
-        end
-
-        def end_date
-          Date.civil( year, month, -1) #strange I know
-        end
-
-        def events
-          Event.find(:all, :conditions => event_conditions)
-        end
-
-        def event_conditions
-          ['starts_at between ? and ?', start_date, end_date]
+      class Borg < Valuable
+        cattr_accessor :count
+        has_value :position, :default => lambda { Borg.count += 1 }
+      
+        def designation
+          "#{self.position} of #{Borg.count}"
         end
       end
 
-this class might appear in a controller like this:
+      >> Borg.count = 6
+      >> seven = Borg.new
+      >> Borg.count = 9
+      >> seven.designation
+      => '7 of 9'
 
-      class CalendarController < ApplicationController
-        def show
-          @presenter = CalendarPresenter.new(params[:calendar])
+Advanced Input Parsing
+----------------------
+
+Sometimes, .to_s isn't enough... the architypical example being Date.parse(value). In these cases, you can specify what class-level method should be used to process the input.
+
+      require 'date'
+
+      class Person < Valuable
+        has_value :date_of_birth, :alias => :dob, :klass => Date, :parse_with => :parse
+
+        def age_in_days
+          Date.today - dob
         end
       end
 
-but it's easier to understand like this:
+      >> sammy = Person.new(:dob => '2012-02-17')
+      >> sammy.age_in_days
+      => Rational(8, 1)
 
-      >> @presenter = CalendarPresenter.new({}) # first pageload
+use it to load associated data from an exising set...
 
-      >> @presenter.start_date
-      => Tue, 01 Dec 2009
+      class Planet < Valuable
+        has_value :name
+        has_value :spaceport
 
-      >> @presenter.end_date
-      => Thu, 31 Dec 2009
+        def Planet.list
+          @list ||= []
+        end
 
-      >> # User selects some other month and year; the next request looks like...
+        def Planet.find_by_name( needle )
+          list.find{|i| i.name == needle }
+        end
+      end
 
-      >> @presenter = CalendarPresenter.new({:month => '2', :year => '2002'})
+      class Spaceship < Valuable
+        has_value :name
+        has_value :home, :klass => Planet, :parse_with => :find_by_name
+      end
 
-      >> @presenter.start_date
-      => Fri, 01 Feb 2002
+      Planet.list << Planet.new(:name => 'Earth', :spaceport => 'KSC')
+      Planet.list << Planet.new(:name => 'Mars', :spaceport => 'Olympus Mons')
 
-      >> @presenter.end_date
-      => Thu, 28 Feb 2002
+      >> vger = Spaceship.new( :name => "V'ger", :home => 'Earth')
+      >> vger.home.spaceport
+      => 'KSC'
 
-      ...
+Parse via lambda:
 
-So, if you're reading this, you're probably thinking, "I could have done that!" Yes, it's true. I'll happily agree that it's a relatively simple tool if you'll agree that it lets you model a calendar with an intuitive syntax, prevents you from writing yet another obvious constructor, and allows you to keep your brain focused on your app.
+      require 'active_support'
 
-_you can access the attributes via the attributes hash. Only default and specified attributes will have entries here._
+      class Movie < Valuable
+        has_value :title, :parse_with => lambda{|x| x.titleize}
+      end
+
+      >> best_movie_ever = Movie.new(:title => 'the usual suspects')
+
+      >> best_movie_ever.title
+      => "The Usual Suspects"
+
+More about Attributes
+---------------------
+
+Access the attributes via the attributes hash. Only default and specified attributes will have entries here.
 
       class Person < Valuable
         has_value :name
@@ -346,9 +296,10 @@ _you can access the attributes via the attributes hash. Only default and specifi
       >> elvis.ssn
       => nil
 
-_also, you can get a list of all the defined attributes from the class_
+Get a list of all the defined attributes from the class:
 
       >> Person.attributes
       => [:name, :is_developer, :ssn]
 
+It's a relatively simple tool that lets you create models with a (hopefully) intuitive syntax, prevents you from writing yet another obvious constructor, and allows you to keep your brain focused on your app.
 
