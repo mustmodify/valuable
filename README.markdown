@@ -117,7 +117,6 @@ _aliases_
       >> xp.name
       => "Windows XP"
 
-
 Formatting Input
 ----------------
 _aka light-weight type-casting_
@@ -216,6 +215,20 @@ Advanced Defaults
       >> Borg.count = 9
       >> seven.designation
       => '7 of 9'
+
+Note -- if you overwrite the constructor, you should call initialize_attributes. Otherwise, your default values won't be set up until the first time the attributes hash is called -- in theory, this could be well after initialization, and could cause unknowable gremlins. Trivial example:
+
+      class Person
+        has_value :created_at, :default => lambda { Time.now }
+
+        def initialize(atts)
+        end
+      end
+
+      >> p = Person.new 
+      >> # wait 10 minutes
+      >> p.created_at == Time.now  # attributes initialized on first use
+      => true
 
 Advanced Input Parsing
 ----------------------

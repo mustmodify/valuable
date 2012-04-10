@@ -41,15 +41,15 @@ class Valuable
   #   >> bus.attributes
   #   => {:color => 'yellow', :number => 16}
   def attributes
-    @attributes
-  end
-
-  def initialize_attributes
     @attributes ||= Valuable::Utils.initial_copy_of_attributes(self.class.defaults) 
   end
+  alias_method :initialize_attributes, :attributes
 
   # accepts an optional hash that will be used to populate the 
   # predefined attributes for this class.
+  #
+  # Note: You are free to overwrite the constructor, but you should call
+  # initialize_attributes OR make sure at least one value is stored.
   def initialize(atts = nil)
     initialize_attributes
     self.update_attributes(atts || {})
