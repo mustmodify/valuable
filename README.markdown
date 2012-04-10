@@ -5,7 +5,7 @@ Valuable enables quick modeling... it's attr_accessor on steroids.  Its simple i
 
 Valuable provides DRY decoration like attr_accessor, but includes default values and other formatting (like, "2" => 2), and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
 
-Tested with "Rubinius":http://www.rubini.us, 1.8.7, 1.9.1, 1.9.2, 1.9.3
+Tested with [Rubinius](http://www.rubini.us "Rubinius"), 1.8.7, 1.9.1, 1.9.2, 1.9.3
 
 Frequent Uses
 -------------
