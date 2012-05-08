@@ -18,6 +18,7 @@ class RailsApp < Valuable
   has_value :tech_lead, :klass => Person, :parse_with => :load
   has_collection :devs, :klass => Person, :parse_with => :load
   has_value :name, :parse_with => lambda{|x| x == 'IA' ? 'Information Architecture' : x}
+  has_value :overlord, :klass => Person, :parse_with => lambda{|name| Person.load(name) }
 end
 
 class ParseWithTest < Test::Unit::TestCase
@@ -43,5 +44,9 @@ class ParseWithTest < Test::Unit::TestCase
     assert_raises ArgumentError, "Class can't promise to return a(n) :integer when using the option :parse_with" do
       animal.has_value :invalid, :klass => :integer, :parse_with => :method
     end
+  end
+
+  def test_that_lambdas_can_be_combined_with_a_class
+    assert_equal 'vader', RailsApp.new(:overlord => 'darth vader').overlord.last_name
   end
 end

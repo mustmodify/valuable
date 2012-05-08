@@ -94,6 +94,8 @@ module Valuable::Utils
           nil
         elsif value.is_a? klass
           value
+        elsif Proc === attributes[name][:parse_with]
+          attributes[name][:parse_with].call(value)
         else
           klass.send( attributes[name][:parse_with] || :new, value)
         end
