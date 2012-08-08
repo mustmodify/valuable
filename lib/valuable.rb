@@ -279,6 +279,11 @@ class Valuable
       sudo_alias "#{options[:alias]}=", "#{name}=" if options[:alias]
     end 
 
+    def register_formatter(name, &block)
+      Valuable::Utils.formatters[name] = block
+    end
+
+
     # Instructs the class NOT to complain if any attributes are set
     # that haven't been declared.
     #

@@ -37,6 +37,9 @@ module Valuable::Utils
       klass = collection_item ? attributes[name][:item_klass] : attributes[name][:klass]
 
       case klass
+      when *formatters.keys 
+        formatters[klass].call(value)
+
       when NilClass
 
         if Proc === attributes[name][:parse_with]
@@ -103,9 +106,13 @@ module Valuable::Utils
       end
 
     end
-    
+   
+    def formatters
+      @formatters ||= {}
+    end
+ 
     def klass_options
-      [NilClass, :integer, Class, :date, :decimal, :string, :boolean]
+      [NilClass, :integer, Class, :date, :decimal, :string, :boolean] + formatters.keys
     end
 
     def known_options
