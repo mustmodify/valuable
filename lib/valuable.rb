@@ -279,6 +279,35 @@ class Valuable
       sudo_alias "#{options[:alias]}=", "#{name}=" if options[:alias]
     end 
 
+    # Register custom formatters. Not happy with the default behavior?
+    # Custom formatters override all pre-defined formatters. However,
+    # remember that formatters are defined globally, rather than 
+    # per-class.
+    #
+    # Valuable.register_formatter(:orientation) do |value|
+    #   case value
+    #   case Numeric
+    #     value
+    #   when 'N', 'North'
+    #     0 
+    #   when 'E', 'East'
+    #     90 
+    #   when 'S', 'South'
+    #     180 
+    #   when 'W', 'West'
+    #     270 
+    #   else
+    #     nil 
+    #   end
+    # end
+    #
+    # class MarsRover < Valuable
+    #   has_value :orientation, :klass => :orientation
+    # end
+    # 
+    # >> curiosity = MarsRover.new(:orientation => 'S')
+    # >> curiosity.orientation
+    # => 180
     def register_formatter(name, &block)
       Valuable::Utils.formatters[name] = block
     end

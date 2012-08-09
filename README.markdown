@@ -230,6 +230,54 @@ Note -- if you overwrite the constructor, you should call initialize_attributes.
       >> p.created_at == Time.now  # attributes initialized on first use
       => true
 
+Registering Formatters
+----------------------
+
+The purpose of Valuable's formatters is to ensure that a model's input is "corrected" and ready for use as soon as the class is instanciated. Valuable provides several formatters by default -- :integer, :boolean, and :date are a few of them. If those don't suit your needs, Valuable allows you to write your own formatting code. You can even override the predefined formatters simply by registering a formatter with the same name.
+
+      # In honor of NASA's Curiosity rover, let's say you were modeling
+      # a rover. Here's the valuable class:
+
+      class Rover < Valuable
+        has_value :orientation
+      end
+
+      Sometimes orientation comes in as 'N', 'E', 'S' or 'W', sometimes it comes in as an orientation in degrees as a string ("92"), and sometimes it comes in as an integer. Let's create a formatter that makes sure everything is formatted in degrees. Notice that we're registering this formatter on Valuable, not on Rover. It will be available to every Valuable model.
+
+     Valuable.register_formatter(:orientation) do |value|
+        case value
+        when Numeric
+          value
+        when /^\d{1,3}$/
+          value.to_i
+        when 'N', 'North'
+          0
+        when 'E', 'East'
+          90
+        when 'S', 'South'
+          180
+        when 'W', 'West'
+          270
+        else
+          nil
+        end
+      end
+ 
+      and then we update rover to use the new formatter:
+
+      class Rover < Valuable
+        has_value :orientation, :klass => :orientation
+      end
+
+      >> Rover.new(:orientation => 90).orientation
+      => 90
+
+      >> Rover.new(:orientation => '282').orientation
+      >> 282
+
+      >> Rover.new(:orientation => 'S').orientation
+      => 180
+
 Advanced Input Parsing
 ----------------------
 
