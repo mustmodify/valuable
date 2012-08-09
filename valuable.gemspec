@@ -4,7 +4,7 @@ version = File.read(File.expand_path("../valuable.version",__FILE__)).strip
 spec = Gem::Specification.new do |s|
   s.name = 'valuable'
   s.version = version 
-  s.summary = "attr_accessor on steroids with defaults, default constructor, and attribute formatting."
+  s.summary = "attr_accessor on steroids with defaults, attribute formatting, alias methods, etc."
   s.description = "Valuable is a ruby base class that is essentially attr_accessor on steroids. A simple and intuitive interface allows you to get on with modeling in your app."
   s.license = 'MIT'
 
