@@ -66,6 +66,10 @@ class BaseTest < Test::Unit::TestCase
     assert_equal nil, Developer.new.experience
   end
 
+  def test_that_integer_attributes_ignore_blanks
+    assert_equal nil, Developer.new(:experience => '').experience
+  end
+
   def test_that_attributes_can_be_klassified
     dev = Developer.new(:cubical => 12)
     assert_equal Cubical, dev.cubical.class
@@ -161,7 +165,7 @@ class BaseTest < Test::Unit::TestCase
   end
 
   def test_that_values_are_cast_to_boolean
-    assert_equal false, Developer.new(:employed => nil).employed
+    assert_equal true, Developer.new(:employed => 'true').employed
   end
 
   def test_that_string_zero_becomes_false
