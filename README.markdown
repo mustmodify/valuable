@@ -1,3 +1,24 @@
+- [Introducing Valuable](#introducing-valuable)
+- [Frequent Uses](#frequent-uses)
+- [Methods](#methods)
+      	- [Class-Level Methods](#class-level-methods)
+		- [Instance-Level Methods](#instance-level-methods)
+- [Installation](#installation)
+- [Usage & Examples](#usage--examples)
+	- [Constructor Accepts an Attributes Hash](#constructor-accepts-an-attributes-hash)
+	- [Default Values](#default-values)
+	- [Nil Values](#nil-values)
+	- [Aliases](#aliases)
+	- [Formatting Input](#formatting-input)
+	- [Pre-Defined Formatters](#pre-defined-formatters)
+	- [Collections](#collections)
+	- [Formatting Collections](#formatting-collections)
+	- [Registering Formatters](#registering-formatters)
+	- [More about Attributesd](#more-about-attributesd)
+	- [Advanced Input Parsing](#advanced-input-parsing)
+	- [Advanced Defaults](#advanced-defaults)
+	- [Advanced Collection Formatting](#advanced-collection-formatting)
+
 Introducing Valuable
 ====================
 
