@@ -1,24 +1,3 @@
-- [Introducing Valuable](#introducing-valuable)
-- [Frequent Uses](#frequent-uses)
-- [Methods](#methods)
-      	- [Class-Level Methods](#class-level-methods)
-		- [Instance-Level Methods](#instance-level-methods)
-- [Installation](#installation)
-- [Usage & Examples](#usage--examples)
-	- [Constructor Accepts an Attributes Hash](#constructor-accepts-an-attributes-hash)
-	- [Default Values](#default-values)
-	- [Nil Values](#nil-values)
-	- [Aliases](#aliases)
-	- [Formatting Input](#formatting-input)
-	- [Pre-Defined Formatters](#pre-defined-formatters)
-	- [Collections](#collections)
-	- [Formatting Collections](#formatting-collections)
-	- [Registering Formatters](#registering-formatters)
-	- [More about Attributesd](#more-about-attributesd)
-	- [Advanced Input Parsing](#advanced-input-parsing)
-	- [Advanced Defaults](#advanced-defaults)
-	- [Advanced Collection Formatting](#advanced-collection-formatting)
-
 Introducing Valuable
 ====================
 
@@ -29,6 +8,27 @@ Valuable provides DRY decoration like attr_accessor, but includes default values
 Tested with [Rubinius](http://www.rubini.us "Rubinius"), 1.8.7, 1.9.1, 1.9.2, 1.9.3
 
 Valuable was originally created to avoid the repetition of writing the constructor-accepts-a-hash method. It has evolved, but at its core are still the same concepts.
+
+Contents
+--------
+
+- [Frequent Uses](#frequent-uses)
+- [Methods](#methods) ( [Class-Level](#class-level-methods), [Instance-Level](#instance-level-methods) )
+- [Installation](#installation)
+- [Usage & Examples](#usage--examples)
+    - [Constructor Accepts an Attributes Hash](#constructor-accepts-an-attributes-hash)
+    - [Default Values](#default-values)
+    - [Nil Values](#nil-values)
+    - [Aliases](#aliases)
+    - [Formatting Input](#formatting-input)
+    - [Pre-Defined Formatters](#pre-defined-formatters)
+    - [Collections](#collections)
+    - [Formatting Collections](#formatting-collections)
+    - [Registering Formatters](#registering-formatters)
+    - [More about Attributesd](#more-about-attributesd)
+    - [Advanced Input Parsing](#advanced-input-parsing)
+    - [Advanced Defaults](#advanced-defaults)
+    - [Advanced Collection Formatting](#advanced-collection-formatting)
 
 Frequent Uses
 =============
