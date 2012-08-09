@@ -7,6 +7,8 @@ Valuable provides DRY decoration like attr_accessor, but includes default values
 
 Tested with [Rubinius](http://www.rubini.us "Rubinius"), 1.8.7, 1.9.1, 1.9.2, 1.9.3
 
+Version 0.9.x is considered stable.
+
 Valuable was originally created to avoid the repetition of writing the constructor-accepts-a-hash method. It has evolved, but at its core are still the same concepts.
 
 Contents
