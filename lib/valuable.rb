@@ -43,7 +43,8 @@ class Valuable
   def attributes
     @attributes ||= Valuable::Utils.initial_copy_of_attributes(self.class.defaults) 
   end
-  alias_method :initialize_attributes, :attributes
+  alias_method :initialize_attributes, :attributes 
+  # alias is for readability in constructor
 
   # accepts an optional hash that will be used to populate the 
   # predefined attributes for this class.
