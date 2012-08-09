@@ -7,24 +7,176 @@ Valuable provides DRY decoration like attr_accessor, but includes default values
 
 Tested with [Rubinius](http://www.rubini.us "Rubinius"), 1.8.7, 1.9.1, 1.9.2, 1.9.3
 
+Valuable was originally created to avoid the repetition of writing the constructor-accepts-a-hash method. It has evolved, but at its core are still the same concepts.
+
 Frequent Uses
--------------
+=============
 
-**pre-refactor modeling** to model a class you want to abstract but know would be a pain... as in, "I would love to pull Appointment out of this WorkOrder class, but since that isn't going to happen soon, let me quickly create WorkOrder.appointments... I can then create Appointment\#to\_s, appointment.end_time, appointment.duration, etc. I can use that to facilitate emitting XML or doing something with views, rather than polluting WorkOrder with appointment-related logic." 
+Valuable was created to help you quickly model things. Things I find myself modeling:
 
-**as a presenter** as in, "I need to take in a few different models to generate this map... I need a class that models the integration, but I don't need to persist that to a database."
++ **data imported from JSON, XML, etc**
++ **the result of an API call**
++ **a subset of some data in an ORM class** say you have a class Person with street, city, state and zip. It might not make sense to store this in a separate table, but you can still create an Address model to hold address-related logic and state like geocode, post_office_box? and Address#==
++ **as a presenter that wraps model** This way you keep view-specific methods out of views and models.
++ **as a presenter that aggregates several models** Generating a map might involve coordinating several different collections of data. Create a valuable class to handle that integration.
++ **to model search forms** - Use Valuable to model an advanced search form. Create an attribute for each drop-down, check-boxe, and text field, and constants to store options. Integrates easily with Rails via @search = CustomerSearch.new(params[:search]) and form_for(@search, :url => ...)
++ **to model reports** like search forms, reports can be stateful when they have critiera that can be selected via form.
++ **as a query builder** ie, "I need to create an (Arel or SQL) query based off of form input." (see previous two points)
++ **experiments / spikes**
++ **factories** factories need well-defined input, so valuable is a great fit.
 
-**creating models from non-standard data sources** to keep data from non-standard data sources in memory during an import or to render data from an API call.
+Methods
+=============
 
-Type Casting in Ruby? You must be crazy...
-------------------------------------------
-Yeah, I get that alot. I mean, about type casting. I'm not writing
-C# over here. Rails does it, they just don't call it type casting,
-so no one complains when they pass in "2" as a parameter and mysteriously
-it ends up as an integer. In fact, I'm going to start using the euphamism
-'Formatting' just so people will stop looking at me that way.
+###Class-Level Methods
 
-Say you're getting information for a directory from a web service via JSON:
+Use these methods to define and inspect provides the following methods:
+
+**has_value( field_name, attributes = {})**
+
+      creates a getter and setter named field_name
+      options:
+        :default - provide a default value
+          has_value :status, :default => 'Active'
+          >> Task.new.status
+          => 'Active'
+
+        :alias - create setters and getters with the name of the attribute and _also_ with the alias. 
+
+          see [Aliases](#aliases) for more information.
+
+        :klass - pre-format the input with one of the [predefined formatters](#pre-defined-formatters), as a class, or with your custom formatter.
+          has_value :age, :klass => :integer
+          >> Person.new(:age => '15').age.class
+          => Fixnum
+
+          has_value :phone_number, :klass => PhoneNumber
+          >> jenny = Person.new(:phone_number => '2018675309')
+
+          >> jenny.phone_number == PhoneNumber.new('2018675309')
+          => true
+
+          see [Formatting Input](#formatting-input) for more information.
+
+        :parse_with - Sometimes you want to instanciate with a method other than new... one example being Date.parse
+          has_value :dob, :klass => Date, :parse_with => :parse
+
+**has_collection( field_name, attributes = {} )**
+
+    like has_value, this creates a getter and setter. The default value is an array.
+
+      class Person
+        has_collection :friends
+      end
+
+      >> Person.new.friends
+      => []
+
+**attributes**
+
+    an array of attributes you have defined on a model.
+
+      class Person < Valuable
+        has_value :first_name
+        has_value :last_name
+      end
+
+      >> Person.attributes
+      => [:first_name, :last_name]
+
+**defaults**
+
+    A hash of the attributes with their default values. Attributes defined without default values do not appear in this list.
+
+      class Pastry < Valuable
+        has_value :primary_ingredient, :default => :sugar
+        has_value :att_with_no_default
+      end
+
+      >> Pastry.defaults
+      => {:primary_ingredient => :sugar}
+
+**register_formatter(name, &block)**
+
+      allows you to provide custom code to pre-format attributes, if the included ones are not sufficient. For instance, 
+      you might wish to register an 'orientation' formatter that accepts either angles or 'N', 'S', 'E', 'W', and converts 
+      those to angles.
+  
+      NOTE: as with other formatters, nil values will not be passed to the formatter. The attribute will simply be set to nil. If this is an issue, let me know.
+
+**acts_as_permissive**
+
+      Valuable classes typically raise an error if you instantiate them with attributes that have not been predefined. 
+      This method makes valuable ignore any unknown attributes.
+
+###Instance-Level Methods
+
+**attributes**
+
+    provides a hash of the attributes and their values.
+
+      class Party < Valuable
+        has_value :host
+        has_value :theme
+        has_value :time, :default => '6pm'
+      end
+
+      >> party = Party.new(:theme => 'Black and Whitle')
+
+      >> party.attributes
+      => {:theme => 'Black and White', :time => '6pm'}
+
+      # note that the 'host' attribute was not set by default, at
+      # instantiation, or via the setter method party.host=, so 
+      # it does not appear in the attributes hash.
+
+**update_attributes(atts={})**
+
+      Accepts a hash of :attribute => :value and updates each associated attributes.
+      Will raise an exception if any of the keys isn't already set up in the class, unless you call acts_as_permissive.
+  
+      class Tomatoe
+        has_value :color
+      end
+  
+      >> t = Tomatoe.new(:color => 'green')
+      >> t.color
+      => 'green'
+      >> t.update_attributes(:color => 'red')
+      >> t.color
+      => 'red'
+
+**write_attribute(att_name, value)**
+
+      this method is called by all the setters and, obviously, 
+      update_attributes.  Using a formatter (if specified), it 
+      updates the attributes hash.
+
+      class Chicken
+        has_value :gender
+      end
+    
+      >> c = Chicken.new
+    
+      >> c.gender
+      => nil
+    
+      >> c.write_attribute(:gender, 'F')
+    
+      >> c.gender
+      => 'F'
+
+Installation
+============
+
+if using bundler, add this to your gemfile:
+
+      gem 'valuable'
+
+and the examples below should work.
+
+Usage & Examples
+================
 
       class Person < Valuable
         has_value :name
@@ -32,13 +184,16 @@ Say you're getting information for a directory from a web service via JSON:
         has_value :phone_number, :klass => PhoneNumber
                # see /examples/phone_number.rb
 
-      'person' =>
-        'name' => 'Mr. Freud',
-        'age' => "344",
-        'phone_number' => '8002195642',
-        'specialization_code' => "2106"
-
-you'll end up with this:
+      params = 
+      {
+        'person' =>
+        {
+          'name' => 'Mr. Freud',
+          'age' => "344",
+          'phone_number' => '8002195642',
+          'specialization_code' => "2106"
+        }
+      }
 
       >> p = Person.new(params[:person])
 
@@ -52,17 +207,12 @@ you'll end up with this:
       => PhoneNumber
 
 "Yeah, I could have just done that myself."
+
 "Right, but now you don't have to."
 
-Basic Syntax
-------------
 
-      class Fruit < Valuable
-        has_value :name
-        has_collection :vitamins
-      end
-
-_constructor accepts an attributes hash_
+Constructor Accepts an Attributes Hash
+--------------------------------------
 
       >> apple = Fruit.new(:name => 'Apple')
 
@@ -72,17 +222,10 @@ _constructor accepts an attributes hash_
       >> apple.vitamins
       => []
 
-_default values_
+Default Values
+--------------
 
-Default values are used when no value is provided to the constructor. If the value nil is provided, nil will be used instead of the default. Default values are populated on instanciation.
-
-When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it.
-
-If a value having a default is set to null after it is constructed, it will NOT be set to the default.
-
-If there is no default value, the result will be nil, EVEN if type casting is provided. Thus, a field typically cast as an Integer can be nil. See calculation of average.
-
-The :default option will accept a lambda and call it on instanciation.
+Default values are... um... you know.
 
       class Developer
         has_value :name
@@ -97,12 +240,45 @@ The :default option will accept a lambda and call it on instanciation.
       >> dev.nickname
       => 'mort'
 
-_setting a value to nil overrides the default._
+If there is no default value, the result will be nil, EVEN if type casting is provided. Thus, a field typically cast as an Integer can be nil. See calculation of average example.
 
-      >> Developer.new(:name => 'KDD', :nickname => nil).nickname
-      => nil
+See also:
++ [nil values](#nil-values)
++ [Advanced Defaults](#advanced-defaults) 
 
-_aliases_
+**Note:** When a default value and a klass are specified, the default value will NOT be cast to type klass -- you must do it. Example:
+
+      class Person
+
+        # WRONG!
+        has_value :dob, :klass => Date, :default => '2012-07-26'
+
+        # Correct
+        has_value :dob, :klass => Date, :default => Date.parse('2012-07-26')
+
+      end
+
+
+Nil Values
+----------
+
+Setting an attribute to nil always results in it being nil. [Default values](#default-values), [pre-defined formatters](#pre-defined-formatters), and [custom formatters](#registering-formatters) have no effect.
+
+      class Account
+        has_value :logins, :klass => :integer, :default => 0
+      end
+
+      >> Account.new(:logins => nil).loginx
+      => nil 
+
+      # note this is not the same as
+      >> nil.to_i
+      => 0
+
+Aliases
+-------
+
+Set additional getters and setters. Useful when outside data sources have odd field names.
 
       # This example requires active_support because of Hash.from_xml
 
@@ -119,7 +295,8 @@ _aliases_
 
 Formatting Input
 ----------------
-_aka light-weight type-casting_
+
+The purpose of Valuable's attribute formatting is to ensure that a model's input is "corrected" and ready for use as soon as the class is instantiated. Valuable provides several formatters by default -- :integer, :boolean, and :date are a few of them. You can optionally write your own formatters -- see [Registering Formatters](#registering-formatters)
 
       class BaseballPlayer < Valuable
 
@@ -139,18 +316,33 @@ _aka light-weight type-casting_
       >> joe.average
       => 0.25
 
-      # Currently supports:
-      # - integer
-      # - decimal ( casts to BigDecimal... NOTE: nil remains nil, not 0 as in nil.to_i )
-      # - string
-      # - boolean ( NOTE: '0' casts to FALSE... This isn't intuitive, but I would be fascinated to know when this is not the correct behavior. )
-      # - or any class ( formats as SomeClass.new( ) unless value.is_a?( SomeClass ) )
+Pre-Defined Formatters
+----------------------
+
+see also [Registering Formatters](#registering-formatters)
+- integer ( see [nil values](#nil-values) )
+- decimal ( casts to BigDecimal. see [nil values](#nil-values) )
+- date    ( see [nil values](#nil-values) )
+- string  
+- boolean ( NOTE: '0' casts to FALSE... I'm not sure whether this is intuitive, but I would be fascinated to know 
+         when this is not the correct behavior. )
+- or any class ( formats as SomeClass.new( ) unless value.is_a?( SomeClass ) )
+
 
 Collections
 -----------
 
+      has_collection :codez
+
+is similar to:
+
+      has_value :codez, :default => []
+
+except that it reads better, and that the formatter is applied to the collection's members, not (obviously) the collection. See [Formatting Collections](#formatting-collections) for more details.
+
       class MailingList < Valuable
         has_collection :emails
+        has_collection :messages, :klass => BulkMessage
       end
 
       >> m = MailingList.new
@@ -163,77 +355,22 @@ Collections
       => m.emails
       >> [ 'johnathon.e.wright@nasa.gov', 'other.people@wherever.com' ]
 
-_formatting collections_
+Formatting Collections
+----------------------
 
-      class Player < Valuable
-        has_value :first_name
-        has_value :last_name
-        has_value :salary
-      end
-        
-      class Team < Valuable
-        has_value :name
-        has_value :long_name
+If a klass is specified, members of the collection will be formatted appropriately:
 
-        has_collection :players, :klass => Player
-      end
- 
-      t = Team.new(:name => 'Toronto', :long_name => 'The Toronto Blue Jays', 
-               'players' => [
-                    {'first_name' => 'Chad', 'last_name' => 'Beck', :salary => 'n/a'},
-                    {'first_name' => 'Shawn', 'last_name' => 'Camp', :salary => '2250000'},
-                    {'first_name' => 'Brett', 'last_name' => 'Cecil', :salary => '443100'},
-                    Player.new(:first_name => 'Travis', :last_name => 'Snider', :salary => '435800')
-                  ])
-
-      >> t.players.first
-      => #<Player:0x7fa51e4a1da0 @attributes={:salary=>"n/a", :first_name=>"Chad", :last_name=>"Beck"}>
-
-      >> t.players.last
-      => #<Player:0x7fa51ea6a9f8 @attributes={:salary=>"435800", :first_name=>"Travis", :last_name=>"Snider"}>
-
-parse_with parses each item in a collection...
-
-      class Roster < Valuable
-        has_collection :players, :klass => Player, :parse_with => :find_by_name
-      end
-
-Advanced Defaults
------------------
-
-      class Borg < Valuable
-        cattr_accessor :count
-        has_value :position, :default => lambda { Borg.count += 1 }
+      >> m.messages << "Houston, we have a problem"
       
-        def designation
-          "#{self.position} of #{Borg.count}"
-        end
-      end
+      >> m.messages.first.class
+      => BulkMessage
 
-      >> Borg.count = 6
-      >> seven = Borg.new
-      >> Borg.count = 9
-      >> seven.designation
-      => '7 of 9'
-
-Note -- if you overwrite the constructor, you should call initialize_attributes. Otherwise, your default values won't be set up until the first time the attributes hash is called -- in theory, this could be well after initialization, and could cause unknowable gremlins. Trivial example:
-
-      class Person
-        has_value :created_at, :default => lambda { Time.now }
-
-        def initialize(atts)
-        end
-      end
-
-      >> p = Person.new 
-      >> # wait 10 minutes
-      >> p.created_at == Time.now  # attributes initialized on first use
-      => true
+see [Advanced Collection Formatting](#advanced-collection-formatting) for more complex examples.
 
 Registering Formatters
 ----------------------
 
-The purpose of Valuable's formatters is to ensure that a model's input is "corrected" and ready for use as soon as the class is instanciated. Valuable provides several formatters by default -- :integer, :boolean, and :date are a few of them. If those don't suit your needs, Valuable allows you to write your own formatting code. You can even override the predefined formatters simply by registering a formatter with the same name.
+If the default formatters don't suit your needs, Valuable allows you to write your own formatting code via register_formatter. You can even override the predefined formatters simply by registering a formatter with the same name.
 
       # In honor of NASA's Curiosity rover, let's say you were modeling
       # a rover. Here's the valuable class:
@@ -277,6 +414,43 @@ The purpose of Valuable's formatters is to ensure that a model's input is "corre
 
       >> Rover.new(:orientation => 'S').orientation
       => 180
+
+More about Attributesd
+---------------------
+
+Access the attributes via the attributes hash. Only default and specified attributes will have entries here.
+
+      class Person < Valuable
+        has_value :name
+        has_value :is_developer, :default => false
+        has_value :ssn
+      end
+
+      >> elvis = Person.new(:name => 'The King')
+
+      >> elvis.attributes
+      => {:name=>"The King", :is_developer=>false}
+
+      >> elvis.attributes[:name]
+      => "The King"
+
+      >> elvis.ssn
+      => nil
+
+      >> elvis.attributes.has_key?(:ssn)
+      => false
+
+      >> elvis.ssn = '409-52-2002'  # allegedly
+
+      >> elvis.attributes[:ssn]
+      => "409-52-2002"
+
+You _can_ write directly to the attributes hash. As far as I know, Valuable will not care. However, formatters will not be applied.
+
+Get a list of all the defined attributes from the class:
+
+      >> Person.attributes
+      => [:name, :is_developer, :ssn]
 
 Advanced Input Parsing
 ----------------------
@@ -337,32 +511,76 @@ Parse via lambda:
       >> best_movie_ever.title
       => "The Usual Suspects"
 
-More about Attributes
----------------------
+Advanced Defaults
+-----------------
 
-Access the attributes via the attributes hash. Only default and specified attributes will have entries here.
+The :default option will accept a lambda and call it on instantiation.
 
-      class Person < Valuable
-        has_value :name
-        has_value :is_developer, :default => false
-        has_value :ssn
+      class Borg < Valuable
+        cattr_accessor :count
+        has_value :position, :default => lambda { Borg.count += 1 }
+      
+        def designation
+          "#{self.position} of #{Borg.count}"
+        end
       end
 
-      >> elvis = Person.new(:name => 'The King')
+      >> Borg.count = 6
+      >> seven = Borg.new
+      >> Borg.count = 9
+      >> seven.designation
+      => '7 of 9'
 
-      >> elvis.attributes
-      => {:name=>"The King", :is_developer=>false}
+**Caution** -- if you overwrite the constructor, you should call initialize_attributes. Otherwise, your default values won't be set up until the first time the attributes hash is called -- in theory, this could be well after initialization, and could cause unknowable gremlins. Trivial example:
 
-      >> elvis.attributes[:name]
-      => "The King"
+      class Person
+        has_value :created_at, :default => lambda { Time.now }
 
-      >> elvis.ssn
-      => nil
+        def initialize(atts)
+        end
+      end
 
-Get a list of all the defined attributes from the class:
+      >> p = Person.new 
+      >> # wait 10 minutes
+      >> p.created_at == Time.now  # attributes initialized on first use
+      => true
 
-      >> Person.attributes
-      => [:name, :is_developer, :ssn]
+Advanced Collection Formatting
+------------------------------
 
-It's a relatively simple tool that lets you create models with a (hopefully) intuitive syntax, prevents you from writing yet another obvious constructor, and allows you to keep your brain focused on your app.
+see [Collections](#collections) and [Formatting Collections](#formatting-collections) for basic examples. A more complex example involves nested Valuable models:
+        
+      class Team < Valuable
+        has_value :name
+        has_value :long_name
+
+        has_collection :players, :klass => Player
+      end
+ 
+      class Player < Valuable
+        has_value :first_name
+        has_value :last_name
+        has_value :salary
+      end
+
+      t = Team.new(:name => 'Toronto', :long_name => 'The Toronto Blue Jays', 
+               'players' => [
+                    {'first_name' => 'Chad', 'last_name' => 'Beck', :salary => 'n/a'},
+                    {'first_name' => 'Shawn', 'last_name' => 'Camp', :salary => '2250000'},
+                    {'first_name' => 'Brett', 'last_name' => 'Cecil', :salary => '443100'},
+                    Player.new(:first_name => 'Travis', :last_name => 'Snider', :salary => '435800')
+                  ])
+
+      >> t.players.first
+      => #<Player:0x7fa51e4a1da0 @attributes={:salary=>"n/a", :first_name=>"Chad", :last_name=>"Beck"}>
+
+      >> t.players.last
+      => #<Player:0x7fa51ea6a9f8 @attributes={:salary=>"435800", :first_name=>"Travis", :last_name=>"Snider"}>
+
+parse_with parses each item in a collection...
+
+      class Roster < Valuable
+        has_collection :players, :klass => Player, :parse_with => :find_by_name
+      end
+
 
