@@ -70,7 +70,7 @@ module Valuable::Utils
 
       when :integer
 
-        value && value.to_i
+        value.to_i if value && value != ''
 
       when :decimal
 
@@ -103,7 +103,7 @@ module Valuable::Utils
           klass.send( attributes[name][:parse_with] || :new, value)
         end
 
-      end
+      end unless value.nil?
 
     end
    
