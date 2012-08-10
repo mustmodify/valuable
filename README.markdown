@@ -27,7 +27,7 @@ Contents
     - [Collections](#collections)
     - [Formatting Collections](#formatting-collections)
     - [Registering Formatters](#registering-formatters)
-    - [More about Attributesd](#more-about-attributesd)
+    - [More about Attributes](#more-about-attributes)
     - [Advanced Input Parsing](#advanced-input-parsing)
     - [Advanced Defaults](#advanced-defaults)
     - [Advanced Collection Formatting](#advanced-collection-formatting)
@@ -40,9 +40,9 @@ Valuable was created to help you quickly model things. Things I find myself mode
 + **data imported from JSON, XML, etc**
 + **the result of an API call**
 + **a subset of some data in an ORM class** say you have a class Person with street, city, state and zip. It might not make sense to store this in a separate table, but you can still create an Address model to hold address-related logic and state like geocode, post_office_box? and Address#==
-+ **as a presenter that wraps model** This way you keep view-specific methods out of views and models.
++ **as a presenter that wraps a model** This way you keep view-specific methods out of views and models.
 + **as a presenter that aggregates several models** Generating a map might involve coordinating several different collections of data. Create a valuable class to handle that integration.
-+ **to model search forms** - Use Valuable to model an advanced search form. Create an attribute for each drop-down, check-boxe, and text field, and constants to store options. Integrates easily with Rails via @search = CustomerSearch.new(params[:search]) and form_for(@search, :url => ...)
++ **to model search forms** - Use Valuable to model an advanced search form. Create an attribute for each drop-down, check-box, and text field, and constants to store options. Integrates easily with Rails via @search = CustomerSearch.new(params[:search]) and form_for(@search, :url => ...)
 + **to model reports** like search forms, reports can be stateful when they have critiera that can be selected via form.
 + **as a query builder** ie, "I need to create an (Arel or SQL) query based off of form input." (see previous two points)
 + **experiments / spikes**
@@ -51,53 +51,68 @@ Valuable was created to help you quickly model things. Things I find myself mode
 Methods
 =============
 
-###Class-Level Methods
+Class-Level Methods
+-------------------
 
-Use these methods to define and inspect provides the following methods:
+###has_value( field_name, options = {})
 
-**has_value( field_name, attributes = {})**
+creates a getter and setter named field_name
 
-      creates a getter and setter named field_name
-      options:
-        :default - provide a default value
-          has_value :status, :default => 'Active'
+options:
++ **default** - provide a default value
+
+          class Task < Valuable
+            has_value :status, :default => 'Active'
+          end
+          
           >> Task.new.status
           => 'Active'
 
-        :alias - create setters and getters with the name of the attribute and _also_ with the alias. 
++ **alias** - create setters and getters with the name of the attribute and _also_ with the alias. See [Aliases](#aliases) for more information.
 
-          see [Aliases](#aliases) for more information.
++ **klass** - pre-format the input with one of the [predefined formatters](#pre-defined-formatters), as a class, or with your [custom formatter](#registering-formatters). See [Formatting Input](#formatting-input) for more information.
 
-        :klass - pre-format the input with one of the [predefined formatters](#pre-defined-formatters), as a class, or with your custom formatter.
-          has_value :age, :klass => :integer
+          class Person < Valuable
+            has_value :age, :klass => :integer
+            has_value :phone_number, :klass => PhoneNumber
+          end
+          
           >> Person.new(:age => '15').age.class
           => Fixnum
 
-          has_value :phone_number, :klass => PhoneNumber
           >> jenny = Person.new(:phone_number => '2018675309')
 
           >> jenny.phone_number == PhoneNumber.new('2018675309')
           => true
 
-          see [Formatting Input](#formatting-input) for more information.
 
-        :parse_with - Sometimes you want to instanciate with a method other than new... one example being Date.parse
-          has_value :dob, :klass => Date, :parse_with => :parse
++ **parse_with** - Sometimes you want to instantiate with a method other than new... one example being Date.parse
 
-**has_collection( field_name, attributes = {} )**
+          class Person
+            has_value :dob, :klass => Date, :parse_with => :parse
+          end
+          
+          # this will call Date.parse('1976-07-26')
+          Person.new(:dob => '1976-07-26')
 
-    like has_value, this creates a getter and setter. The default value is an array.
+###has_collection( field_name, options = {} )
 
-      class Person
-        has_collection :friends
-      end
+like has_value, this creates a getter and setter. The default value is an array.
 
-      >> Person.new.friends
-      => []
+options:
++ **klass** - apply pre-defined or custom formatters to each element of the array.
++ **alias** - create additional getters and setters under this name.
 
-**attributes**
+        class Person
+          has_collection :friends
+        end
 
-    an array of attributes you have defined on a model.
+        >> Person.new.friends
+        =>   []
+
+###attributes
+
+an array of attributes you have defined on a model.
 
       class Person < Valuable
         has_value :first_name
@@ -107,9 +122,9 @@ Use these methods to define and inspect provides the following methods:
       >> Person.attributes
       => [:first_name, :last_name]
 
-**defaults**
+###defaults
 
-    A hash of the attributes with their default values. Attributes defined without default values do not appear in this list.
+A hash of the attributes with their default values. Attributes defined without default values do not appear in this list.
 
       class Pastry < Valuable
         has_value :primary_ingredient, :default => :sugar
@@ -119,22 +134,20 @@ Use these methods to define and inspect provides the following methods:
       >> Pastry.defaults
       => {:primary_ingredient => :sugar}
 
-**register_formatter(name, &block)**
+###register_formatter(name, &block)
 
-      allows you to provide custom code to pre-format attributes, if the included ones are not sufficient. For instance, 
-      you might wish to register an 'orientation' formatter that accepts either angles or 'N', 'S', 'E', 'W', and converts 
-      those to angles.
+Allows you to provide custom code to pre-format attributes, if the included ones are not sufficient. For instance, you might wish to register an 'orientation' formatter that accepts either angles or 'N', 'S', 'E', 'W', and converts those to angles. See [registering formatters](#registering-formatters) for details and examples.
   
-      NOTE: as with other formatters, nil values will not be passed to the formatter. The attribute will simply be set to nil. If this is an issue, let me know.
+**Note:** as with other formatters, nil values will not be passed to the formatter. The attribute will simply be set to nil. See [nil values](#nil-values). If this is an issue, let me know.
 
-**acts_as_permissive**
+###acts\_as\_permissive
 
-      Valuable classes typically raise an error if you instantiate them with attributes that have not been predefined. 
-      This method makes valuable ignore any unknown attributes.
+Valuable classes typically raise an error if you instantiate them with attributes that have not been predefined. This method makes valuable ignore any unknown attributes.
 
-###Instance-Level Methods
+Instance-Level Methods
+----------------------
 
-**attributes**
+###attributes
 
     provides a hash of the attributes and their values.
 
@@ -153,10 +166,9 @@ Use these methods to define and inspect provides the following methods:
       # instantiation, or via the setter method party.host=, so 
       # it does not appear in the attributes hash.
 
-**update_attributes(atts={})**
+###update_attributes(atts={})
 
-      Accepts a hash of :attribute => :value and updates each associated attributes.
-      Will raise an exception if any of the keys isn't already set up in the class, unless you call acts_as_permissive.
+Accepts a hash of :attribute => :value and updates each associated attributes. Will raise an exception if any of the keys isn't already set up in the class, unless you call acts_as_permissive.
   
       class Tomatoe
         has_value :color
@@ -169,11 +181,9 @@ Use these methods to define and inspect provides the following methods:
       >> t.color
       => 'red'
 
-**write_attribute(att_name, value)**
+###write_attribute(att_name, value)
 
-      this method is called by all the setters and, obviously, 
-      update_attributes.  Using a formatter (if specified), it 
-      updates the attributes hash.
+this method is called by all the setters and, obviously, update_attributes.  Using a formatter (if specified), it updates the attributes hash.
 
       class Chicken
         has_value :gender
@@ -206,7 +216,8 @@ Usage & Examples
         has_value :age, :klass => :integer
         has_value :phone_number, :klass => PhoneNumber
                # see /examples/phone_number.rb
-
+      end
+      
       params = 
       {
         'person' =>
@@ -438,7 +449,7 @@ If the default formatters don't suit your needs, Valuable allows you to write yo
       >> Rover.new(:orientation => 'S').orientation
       => 180
 
-More about Attributesd
+More about Attributes
 ---------------------
 
 Access the attributes via the attributes hash. Only default and specified attributes will have entries here.
@@ -478,7 +489,18 @@ Get a list of all the defined attributes from the class:
 Advanced Input Parsing
 ----------------------
 
-Sometimes, .to_s isn't enough... the architypical example being Date.parse(value). In these cases, you can specify what class-level method should be used to process the input.
+When you specify a klass, Valuable will pass any input (that isn't already that klass) to the constructor. If you want to use a class-level method other than the constructor, pass the method name to parse\_with. Perhaps it should have been called :construct\_with. :)
+
+Default behavior:
+
+      class Customer
+        has_value :payment_method, :klass => PaymentMethod
+      end
+      
+      # this will call PaymentMethod.new('1232123')
+      Customer.new(:payment_method => '1232123')
+
+using parse_with:
 
       require 'date'
 
@@ -493,6 +515,19 @@ Sometimes, .to_s isn't enough... the architypical example being Date.parse(value
       >> sammy = Person.new(:dob => '2012-02-17')
       >> sammy.age_in_days
       => Rational(8, 1)
+
+example using a lookup method:
+
+      class Person < ActiveRecord::Base
+        def find_by_full_name( full_name )
+          #some finder code
+        end
+      end
+      
+      class Photograph < Valuable
+        has_value :photographer, :klass => Person
+      end
+
 
 use it to load associated data from an exising set...
 
@@ -521,7 +556,7 @@ use it to load associated data from an exising set...
       >> vger.home.spaceport
       => 'KSC'
 
-Parse via lambda:
+You can also provide a lambda. This is similar to specifying a custom formatter, except that it only applies to this attribute and can not be re-used.
 
       require 'active_support'
 
