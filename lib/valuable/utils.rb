@@ -116,7 +116,7 @@ module Valuable::Utils
     end
 
     def known_options
-      [:klass, :default, :negative, :alias, :parse_with]
+      [:klass, :default, :negative, :alias, :parse_with, :extend]
     end
 
     # this helper raises an exception if the options passed to has_value

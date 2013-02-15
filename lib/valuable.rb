@@ -157,10 +157,13 @@ class Valuable
     def has_value(name, options={})
       Valuable::Utils.check_options_validity(self.class.name, name, options)
 
+      options[:extend] = [options[:extend]].flatten.compact
+
       name = name.to_sym
       _attributes[name] = options 
-      
-      create_accessor_for(name)
+     
+      create_accessor_for(name, options[:extend])
+
       create_question_for(name) if options[:klass] == :boolean
       create_negative_question_for(name, options[:negative]) if options[:klass] == :boolean && options[:negative]
       
@@ -200,12 +203,23 @@ class Valuable
       end
     end
 
-    # creates a simple accessor method named after the attribute
-    def create_accessor_for(name)
+    # creates an accessor method named after the 
+    # attribute... can be used as a chained setter, 
+    # as in:
+    #
+    #     whitehouse.windows(5).doors(4).oval_rooms(1)
+    #
+    # If NOT used as a setter, returns the value,
+    # extended by the modules listed in the second 
+    # parameter.
+    def create_accessor_for(name, extensions)
       define_method name do |*args|
-        
-        if args.length == 0 
-          attributes[name]
+        if args.length == 0
+          attributes[name].tap do |out|
+            extensions.each do |extension|
+              out.extend( extension )
+            end
+          end
         else
           send("#{name}=", *args)
           self
@@ -270,10 +284,11 @@ class Valuable
       options[:item_klass] = options[:klass] if options[:klass]
       options[:klass] = :collection
       options[:default] = []
+      options[:extend] = [options[:extend]].flatten.compact
 
       _attributes[name] = options 
       
-      create_accessor_for(name)
+      create_accessor_for(name, options[:extend])
       create_setter_for(name)
 
       sudo_alias options[:alias], name if options[:alias]
