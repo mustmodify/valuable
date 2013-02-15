@@ -8,7 +8,7 @@ class Beer < Valuable
   has_value :brewery
 end
 
-class AliasTest < Test::Unit::TestCase
+class WriteAndReadAttributeTest < Test::Unit::TestCase
 
   def test_that_values_can_be_set_using_write_attribute
     beer = Beer.new
