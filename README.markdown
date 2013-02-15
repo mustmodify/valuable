@@ -24,8 +24,10 @@ Contents
     - [Aliases](#aliases)
     - [Formatting Input](#formatting-input)
     - [Pre-Defined Formatters](#pre-defined-formatters)
+    - [Extending Values](#extending-values)
     - [Collections](#collections)
     - [Formatting Collections](#formatting-collections)
+    - [Extending Collections](#extending-collections)
     - [Registering Formatters](#registering-formatters)
     - [More about Attributes](#more-about-attributes)
     - [Advanced Input Parsing](#advanced-input-parsing)
@@ -102,6 +104,7 @@ like has_value, this creates a getter and setter. The default value is an array.
 options:
 + **klass** - apply pre-defined or custom formatters to each element of the array.
 + **alias** - create additional getters and setters under this name.
++ **extend** - extend the collection with the provided module or modules.
 
         class Person
           has_collection :friends
@@ -362,6 +365,23 @@ see also [Registering Formatters](#registering-formatters)
          when this is not the correct behavior. )
 - or any class ( formats as SomeClass.new( ) unless value.is_a?( SomeClass ) )
 
+Extending Values
+----------------
+
+As with has_value, you can do something like:
+
+      module PirateTranslator
+        def to_pirate
+          "#{self} AAARRRRRGgghhhh!"
+        end
+      end
+
+      class Envelope < Valuable
+        has_value :message, :extend => PirateTranslator
+      end
+
+      >> Envelope.new(:message => 'contrived').message.to_pirate
+      => "contrived AAARRRRRGgghhhh!"
 
 Collections
 -----------
@@ -372,7 +392,9 @@ is similar to:
 
       has_value :codez, :default => []
 
-except that it reads better, and that the formatter is applied to the collection's members, not (obviously) the collection. See [Formatting Collections](#formatting-collections) for more details.
+except 
+  * it reads better
+  * that the formatter is applied to the collection's members, not (obviously) the collection. See [Formatting Collections](#formatting-collections) for more details.
 
       class MailingList < Valuable
         has_collection :emails
@@ -400,6 +422,24 @@ If a klass is specified, members of the collection will be formatted appropriate
       => BulkMessage
 
 see [Advanced Collection Formatting](#advanced-collection-formatting) for more complex examples.
+
+Extending Collections
+---------------------
+
+As with has_value, you can do something like:
+
+      module PirateTranslator
+        def to_pirate
+          "#{self} AAARRRRRGgghhhh!"
+        end
+      end
+
+      class Envelope < Valuable
+        has_value :message, :extend => PirateTranslator
+      end
+
+      >> Envelope.new(:message => 'contrived').message.to_pirate
+      => "contrived AAARRRRRGgghhhh!"
 
 Registering Formatters
 ----------------------
