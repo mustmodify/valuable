@@ -33,6 +33,8 @@ Contents
     - [Advanced Input Parsing](#advanced-input-parsing)
     - [Advanced Defaults](#advanced-defaults)
     - [Advanced Collection Formatting](#advanced-collection-formatting)
+- Other Examples
+    - [Validations](/docs/validations.markdown)
 
 Frequent Uses
 =============
