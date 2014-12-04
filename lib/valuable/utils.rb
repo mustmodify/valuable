@@ -49,10 +49,8 @@ module Valuable::Utils
         end
 
       when :collection
-        if( value.kind_of?(Array) )
-          out = value.map do |item|
-            Valuable::Utils.format( name, item, attributes, true )
-          end
+        value.map do |item|
+          Valuable::Utils.format( name, item, attributes, true )
         end
 
       when :date
