@@ -28,3 +28,4 @@ task :clean => [:clobber_package, :clobber_rdoc] do
   File.delete(*temp_files)
 end
 
+task :default => [:test]
