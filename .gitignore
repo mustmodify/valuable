@@ -7,5 +7,4 @@
 .svn
 pkg
 vendor
-Gemfile.lock
 *.gem
