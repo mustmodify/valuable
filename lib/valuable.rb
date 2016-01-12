@@ -283,7 +283,7 @@ class Valuable
       name = name.to_sym
       options[:item_klass] = options[:klass] if options[:klass]
       options[:klass] = :collection
-      options[:default] = []
+      options[:default] ||= []
       options[:extend] = [options[:extend]].flatten.compact
 
       _attributes[name] = options 

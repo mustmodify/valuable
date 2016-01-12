@@ -6,6 +6,7 @@ require 'date'
 require File.expand_path(File.dirname(__FILE__) + '/../examples/phone_number')
 class Person < Valuable
   has_value :dob, :klass => :date
+  has_collection :dreams, :default => [:happiness, :respect]
 end
 
 class Chemical < Valuable
@@ -55,6 +56,10 @@ class TypicalTest < Test::Unit::TestCase
   def test_that_nil_input_is_preserved_for_decimals
     lemon_juice = Chemical.new(:ph => nil)
     assert_equal nil, lemon_juice.ph
+  end
+
+  def test_that_it_uses_the_default_collection
+    assert_equal Person.new.dreams, [:happiness, :respect]
   end
 end
 
