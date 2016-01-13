@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    valuable (0.9.9)
+    valuable (0.9.10)
 
 GEM
   remote: http://rubygems.org/
@@ -30,3 +30,6 @@ DEPENDENCIES
   rspec (= 2.14.1)
   test-unit
   valuable!
+
+BUNDLED WITH
+   1.10.6
