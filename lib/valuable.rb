@@ -158,6 +158,7 @@ class Valuable
       Valuable::Utils.check_options_validity(self.class.name, name, options)
 
       options[:extend] = [options[:extend]].flatten.compact
+      options[:allow_blank] = options.has_key?(:allow_blank) ? options[:allow_blank] : true
 
       name = name.to_sym
       _attributes[name] = options 
@@ -167,7 +168,7 @@ class Valuable
       create_question_for(name) if options[:klass] == :boolean
       create_negative_question_for(name, options[:negative]) if options[:klass] == :boolean && options[:negative]
       
-      create_setter_for(name)
+      create_setter_for(name, allow_blank: options[:allow_blank] )
 
       sudo_alias options[:alias], name if options[:alias]
       sudo_alias "#{options[:alias]}=", "#{name}=" if options[:alias]
@@ -188,13 +189,14 @@ class Valuable
     # >> player.attributes[:phone] = "8778675309"
     # >> player.phone
     # => "8778675309"
-    def create_setter_for(attribute)
+    def create_setter_for(attribute, options)
       setter_method = "#{attribute}="
 
       define_method setter_method do |value|
-        write_attribute(attribute, value)
+        if options[:allow_blank] || value != ""
+          write_attribute(attribute, value)
+        end
       end
-
     end
 
     def sudo_alias( alias_name, method_name )
@@ -289,7 +291,7 @@ class Valuable
       _attributes[name] = options 
       
       create_accessor_for(name, options[:extend])
-      create_setter_for(name)
+      create_setter_for(name, allow_blank: false)
 
       sudo_alias options[:alias], name if options[:alias]
       sudo_alias "#{options[:alias]}=", "#{name}=" if options[:alias]

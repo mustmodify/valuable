@@ -61,5 +61,13 @@ class TypicalTest < Test::Unit::TestCase
   def test_that_it_uses_the_default_collection
     assert_equal Person.new.dreams, [:happiness, :respect]
   end
+
+  def test_that_we_can_prevent_blanks
+    device = Class.new(Valuable)
+    device.has_value( :battery_percent, :allow_blank => false )
+
+    cell = device.new(:battery_percent => '')
+    assert_equal( nil, cell.battery_percent )
+  end
 end
 
