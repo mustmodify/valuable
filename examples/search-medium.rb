@@ -4,7 +4,7 @@ class CustomerSearch < Valuable
   has_value :last_name
   has_value :first_name
   has_value :zipcode
-  has_value :partner_id
+  has_value :partner_id, :klass => :integer
 
   def terms
     # With truly simple cases, you can just use `attributes` for this
