@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    valuable (0.9.10)
+    valuable (0.9.12)
 
 GEM
   remote: http://rubygems.org/

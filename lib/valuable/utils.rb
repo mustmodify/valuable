@@ -1,6 +1,7 @@
 # Trying to extract as much logic as possible to minimize the memory
 # footprint of individual instances. Feedback welcome.
 require 'bigdecimal'
+require 'date'
 
 module Valuable::Utils
   class << self
@@ -61,7 +62,7 @@ module Valuable::Utils
         when "ActiveSupport::TimeWithZone", "Time", "DateTime"
           value.to_date
         when "String"
-          value && DateTime.parse(value)
+          value && Date.parse(value)
         else
           value
         end
