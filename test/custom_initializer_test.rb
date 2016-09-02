@@ -3,7 +3,7 @@ $: << File.expand_path(File.dirname(__FILE__) + '/../lib')
 require 'rubygems'
 require 'test/unit'
 require 'valuable.rb'
-require 'mocha'
+require 'mocha/setup'
 
 class Person < Valuable
   has_value :first_name

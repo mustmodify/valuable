@@ -2,7 +2,7 @@ $: << File.expand_path(File.dirname(__FILE__) + '/../lib')
 
 require 'test/unit'
 require 'valuable.rb'
-require 'mocha'
+require 'mocha/setup'
 
 class Cubical < String
   def initialize(number)
