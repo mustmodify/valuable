@@ -118,11 +118,20 @@ module Valuable::Utils
       [:klass, :default, :negative, :alias, :parse_with, :extend, :allow_blank]
     end
 
+    def can_be_duplicated?( item )
+      Marshal.dump(item)
+      true
+    rescue
+      false
+    end
+
     # this helper raises an exception if the options passed to has_value
     # are wrong. Mostly written because I occasionally used :class instead
     # of :klass and, being a moron, wasted time trying to find the issue.
     def check_options_validity( class_name, attribute, options )
       invalid_options = options.keys - known_options
+
+      raise ArgumentError, "#{class_name}##{attribute} has a default value that must be set using a lambda. Use :default => lambda { Thing.new }." if options[:default] && !options[:default].kind_of?(Proc) && !can_be_duplicated?( options[:default] )
 
       raise ArgumentError, "has_value did not know how to respond to option(s) #{invalid_options.join(', ')}. Valid (optional) arguments are: #{known_options.join(', ')}" unless invalid_options.empty?    
 

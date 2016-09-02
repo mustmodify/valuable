@@ -35,5 +35,13 @@ class BadAttributesTest < Test::Unit::TestCase
       model.new(:invalid => 'should be ignored')
     end
   end
+
+  def test_that_we_provide_a_better_error_when_objects_can_not_be_marhsaled
+    assert_raises ArgumentError do
+      Class.new(Valuable) do
+        has_value :invalid, :default => StringIO.new
+      end
+    end
+  end
 end
 
