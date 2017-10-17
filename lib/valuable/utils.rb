@@ -38,7 +38,7 @@ module Valuable::Utils
       klass = collection_item ? attributes[name][:item_klass] : attributes[name][:klass]
 
       case klass
-      when *formatters.keys 
+      when *formatters.keys
         formatters[klass].call(value)
 
       when NilClass
@@ -81,15 +81,15 @@ module Valuable::Utils
         else
           BigDecimal.new( value.to_s )
         end
-  
+
       when :string
-        
+
         value && value.to_s
 
       when :boolean
 
         value == '0' ? false : !!value
-      
+
       else
 
         if value.nil?
@@ -105,11 +105,11 @@ module Valuable::Utils
       end unless value.nil?
 
     end
-   
+
     def formatters
       @formatters ||= {}
     end
- 
+
     def klass_options
       [NilClass, :integer, Class, :date, :decimal, :string, :boolean] + formatters.keys
     end
@@ -133,7 +133,7 @@ module Valuable::Utils
 
       raise ArgumentError, "#{class_name}##{attribute} has a default value that must be set using a lambda. Use :default => lambda { Thing.new }." if options[:default] && !options[:default].kind_of?(Proc) && !can_be_duplicated?( options[:default] )
 
-      raise ArgumentError, "has_value did not know how to respond to option(s) #{invalid_options.join(', ')}. Valid (optional) arguments are: #{known_options.join(', ')}" unless invalid_options.empty?    
+      raise ArgumentError, "has_value did not know how to respond to option(s) #{invalid_options.join(', ')}. Valid (optional) arguments are: #{known_options.join(', ')}" unless invalid_options.empty?
 
       raise ArgumentError, "#{class_name} doesn't know how to format #{attribute} with :klass => #{options[:klass].inspect}" unless klass_options.any?{|klass| klass === options[:klass]}
 
