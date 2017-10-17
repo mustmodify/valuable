@@ -62,7 +62,7 @@ module Valuable::Utils
         when "ActiveSupport::TimeWithZone", "Time", "DateTime"
           value.to_date
         when "String"
-          value && Date.parse(value)
+          value && begin; Date.parse(value); rescue; end
         else
           value
         end

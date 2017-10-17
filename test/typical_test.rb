@@ -21,6 +21,11 @@ class TypicalTest < Test::Unit::TestCase
     assert_equal( born_on, me.dob )
   end
 
+  def test_that_date_do_not_flip_out
+    me = Person.new( :dob => "" )
+    assert_equal( nil, me.dob )
+  end
+
   def test_that_dates_are_parsed_from_strings
     neil_born_on = 'August 5, 1930'
     neil = Person.new( :dob => neil_born_on )
