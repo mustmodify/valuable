@@ -69,7 +69,7 @@ module Valuable::Utils
 
       when :integer
 
-        value.to_i if value && value != ''
+        value.to_i if value && value.to_s =~ /^\d{1,}$/
 
       when :decimal
 

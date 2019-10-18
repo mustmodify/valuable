@@ -43,5 +43,13 @@ class BadAttributesTest < Test::Unit::TestCase
       end
     end
   end
+
+  def test_that_Strings_are_not_numbers
+    player = Class.new(Valuable) do
+      has_value :number, :klass => :integer
+    end
+
+    assert_equal nil, player.new(number: 'abc').number
+  end
 end
 
