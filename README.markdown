@@ -2,6 +2,47 @@
 
 Valuable enables quick modeling... it's `attr_accessor` on steroids.  Its simple interface allows you to build, change and discard models without hassles, so you can get on with the logic specific to your application.
 
+When working with Rails, Sinatra etc., I find myself creating non-Active-Record classes to create testable classes for:
+
+* reports
+* events (model interactions between classes; this code does not belong in either a controller or an ORM model.)
+* view helpers ( very hard to test in Rails unless they're in a class like EmployeePresenter or DashboardPresenter )
+* incoming / outgoing API handlers (ie MapQuest::GeoCoder or LocalCache::GeoCoder )
+* search ( `Search` but also `EmployeeSearch`, `EmployeeSearch.new(company: co).incomplete_pto_for(year)`, etc.
+* factories
+    
+Here's an example of modeling an event, logic that doesn't belong in either a controller or a model:
+
+```ruby
+class EmployeeHireAide < Valuable
+    has_value :employee, klass: Employee
+    has_value :hire_date, klass: :date
+    has_value :current_user               
+
+    def fire
+      employee.save.tap do |success|
+        if success
+          add_note_about_hiring
+          create_documentation_checklist
+          create_user_account
+        end
+      end
+    end
+
+    def add_note_about_hiring
+      Note.create(notable: employee, author: current_user, event: 'Hire', body: "Hired employee on #{hire_date.to_s(:mdy)}")
+    end
+
+    def create_documentation_checklist
+      ChecklistTemplate.find_by_name('employee_documentation').create_checklist(reference: employee)
+    end
+
+    def create_user_account
+      ... etc ...
+    end
+end
+```
+
 Valuable provides DRY decoration like `attr_accessor`, but includes default values and other formatting (like, `"2" => 2`), and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
 
 Tested with [Rubinius](http://www.rubini.us "Rubinius"), `1.8.7`, `1.9.1`, `1.9.2`, `1.9.3`
