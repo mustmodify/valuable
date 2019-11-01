@@ -43,6 +43,24 @@ class EmployeeHireAide < Valuable
 end
 ```
 
+Then in your controller:
+
+```ruby
+class EmployeeController
+  def create
+    aide = EmployeeHireAide.new(employee: params[:employee], current_user: current_user, hire_date: params[:hire_date])
+
+    if !current_user.can_create?(:employee)
+      go_away
+    elsif aide.fire
+      redirect_to aide.employee
+    else
+      render action: :new
+    end
+  end
+end
+```
+
 Valuable provides DRY decoration like `attr_accessor`, but includes default values and other formatting (like, `"2" => 2`), and a constructor that accepts an attributes hash. It provides a class-level list of attributes, an instance-level attributes hash, and more.
 
 Tested with [Rubinius](http://www.rubini.us "Rubinius"), `1.8.7`, `1.9.1`, `1.9.2`, `1.9.3`
